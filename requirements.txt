@@ -1,0 +1,10 @@
+streamlit>=1.40
+pandas>=2.0
+numpy>=1.26
+pillow>=10.0
+
+# --- Opcional: modelo real de Hugging Face ---
+# Descomentar cuando conectemos el clasificador (ver core/modelo.py)
+# transformers>=4.44
+# torch>=2.2
+# huggingface_hub>=0.24

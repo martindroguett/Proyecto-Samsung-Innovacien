@@ -1,0 +1,13 @@
+[theme]
+base = "light"
+primaryColor = "#4A7C59"           # verde musgo / bosque
+backgroundColor = "#FBF9F3"        # arena clara
+secondaryBackgroundColor = "#EFEADB"  # arena
+textColor = "#2B2B26"              # corteza
+font = "sans serif"
+
+[server]
+maxUploadSize = 30
+
+[browser]
+gatherUsageStats = false
