@@ -6,23 +6,36 @@ TODO (equipo): reemplazar por los datos reales / base de datos definitiva.
 
 from __future__ import annotations
 
+import base64
 import math
+import mimetypes
+import re
+import unicodedata
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import requests
 import streamlit as st
 
 RAIZ = Path(__file__).resolve().parent.parent
 DIR_DATOS = RAIZ / "data"
 DIR_SUBIDAS = DIR_DATOS / "subidas"
+DIR_IMAGENES = DIR_DATOS / "imagenes"
 
 CSV_ESPECIES = DIR_DATOS / "especies.csv"
 CSV_AVISTAMIENTOS = DIR_DATOS / "avistamientos.csv"
 CSV_REPORTES = DIR_DATOS / "reportes.csv"
 
+# Si es False, nunca se consulta Wikipedia: solo se muestran fotos de
+# data/imagenes/<especie>/ (o el placeholder si la especie no tiene carpeta).
+USAR_WIKIPEDIA_COMO_RESPALDO = True
+
+EXTENSIONES_IMAGEN = (".jpg", ".jpeg", ".png", ".webp")
+
 TIPOS = ["Animal", "Insecto", "Planta"]
-NIVELES_RIESGO = ["Alto", "Medio", "Bajo"]
+NIVELES_IMPACTO = ["Alto", "Medio", "Bajo"]
 
 # Punto de referencia por region, para centrar el mapa mientras no tengamos
 # geolocalizacion del navegador.
@@ -67,7 +80,7 @@ def cargar_avistamientos() -> pd.DataFrame:
 
 def cargar_reportes() -> pd.DataFrame:
     """Reportes enviados desde la app. Vacio si aun no hay ninguno."""
-    columnas = ["ticket", "fecha_hora", "especie", "confianza", "tipo", "riesgo",
+    columnas = ["ticket", "fecha_hora", "especie", "confianza", "tipo", "impacto_ambiental",
                 "region", "comuna", "lat", "lon", "autoridad", "estado",
                 "contacto", "comentario", "imagen"]
     if not CSV_REPORTES.exists():
@@ -119,6 +132,73 @@ def avistamientos_cerca(lat: float, lon: float, radio_km: float = 150.0) -> pd.D
         lambda f: distancia_km(lat, lon, f["lat"], f["lon"]), axis=1
     ).round(1)
     return df[df["distancia_km"] <= radio_km].sort_values("distancia_km").reset_index(drop=True)
+
+
+def _normalizar(texto: str) -> str:
+    """'Castor americano' -> 'castoramericano', para comparar nombres de carpeta
+    sin preocuparse de tildes, mayusculas, espacios o guiones."""
+    sin_tildes = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]", "", sin_tildes.lower())
+
+
+def _archivo_a_data_uri(ruta: Path) -> str:
+    """Convierte un archivo local a data URI, para poder usarlo en un <img src=...>."""
+    mime = mimetypes.guess_type(ruta.name)[0] or "image/jpeg"
+    b64 = base64.b64encode(ruta.read_bytes()).decode()
+    return f"data:{mime};base64,{b64}"
+
+
+@st.cache_data(show_spinner=False)
+def imagen_especie_local(nombre_comun: str) -> str | None:
+    """Busca la primera foto en data/imagenes/<nombre_comun>/ y la devuelve como data URI.
+
+    El nombre de la carpeta no necesita coincidir exactamente: 'Castor americano',
+    'castor_americano' y 'castor-americano' apuntan a la misma carpeta.
+    """
+    if not DIR_IMAGENES.exists():
+        return None
+
+    objetivo = _normalizar(nombre_comun)
+    for carpeta in sorted(DIR_IMAGENES.iterdir()):
+        if carpeta.is_dir() and _normalizar(carpeta.name) == objetivo:
+            for archivo in sorted(carpeta.iterdir()):
+                if archivo.suffix.lower() in EXTENSIONES_IMAGEN:
+                    return _archivo_a_data_uri(archivo)
+    return None
+
+
+@st.cache_data(show_spinner=False)
+def imagen_especie_wikipedia(nombre_cientifico: str) -> str | None:
+    """Busca una foto de la especie por su nombre cientifico en Wikipedia.
+
+    Se usa solo como respaldo cuando no hay foto local.
+    """
+    try:
+        url = ("https://es.wikipedia.org/api/rest_v1/page/summary/"
+               + urllib.parse.quote(nombre_cientifico))
+        r = requests.get(url, timeout=5, headers={"accept": "application/json"})
+        if r.ok:
+            data = r.json()
+            imagen = data.get("originalimage") or data.get("thumbnail") or {}
+            return imagen.get("source")
+    except Exception:
+        pass
+    return None
+
+
+def imagen_especie(nombre_comun: str, nombre_cientifico: str = "") -> str | None:
+    """Foto para mostrar en la ficha de una especie.
+
+    Prioridad: 1) data/imagenes/<nombre_comun>/ (fotos propias),
+    2) Wikipedia como respaldo si USAR_WIKIPEDIA_COMO_RESPALDO es True,
+    3) None (la ficha muestra un placeholder).
+    """
+    local = imagen_especie_local(nombre_comun)
+    if local:
+        return local
+    if USAR_WIKIPEDIA_COMO_RESPALDO and nombre_cientifico:
+        return imagen_especie_wikipedia(nombre_cientifico)
+    return None
 
 
 def especie_por_nombre(nombre: str) -> dict | None:

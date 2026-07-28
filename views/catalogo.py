@@ -33,9 +33,12 @@ def render() -> None:
     columnas = st.columns(2, gap="medium")
     for i, (_, f) in enumerate(filtradas.iterrows()):
         detalle = f"{f['descripcion']}<br><b>Autoridad:</b> {f['autoridad']}"
+        imagen_url = datos.imagen_especie(f["nombre_comun"], f["nombre_cientifico"])
+        portador = str(f.get("portador_enfermedades", "No")).strip().lower() == "si"
         with columnas[i % 2]:
             st.markdown(
-                ficha_especie(f["nombre_comun"], f["nombre_cientifico"], f["riesgo"], detalle),
+                ficha_especie(f["nombre_comun"], f["nombre_cientifico"], f["impacto_ambiental"],
+                              detalle, imagen_url=imagen_url, portador_enfermedades=portador),
                 unsafe_allow_html=True,
             )
 

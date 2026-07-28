@@ -45,7 +45,7 @@ class Prediccion:
     confianza: float
     es_invasora: bool
     tipo: str = "Desconocido"
-    riesgo: str = "Bajo"
+    impacto_ambiental: str = "Bajo"
     autoridad: str = "SAG"
     descripcion: str = ""
     alternativas: list[tuple[str, float]] = field(default_factory=list)
@@ -95,7 +95,7 @@ def _clasificar_simulado(imagen_bytes: bytes) -> Prediccion:
         confianza=round(confianza, 3),
         es_invasora=True,  # todo el catalogo de ejemplo es invasor
         tipo=fila["tipo"],
-        riesgo=fila["riesgo"],
+        impacto_ambiental=fila["impacto_ambiental"],
         autoridad=fila["autoridad"],
         descripcion=fila["descripcion"],
         alternativas=alternativas,
@@ -145,7 +145,7 @@ def _clasificar_hf(imagen_bytes: bytes) -> Prediccion:
         confianza=round(float(mejor["score"]), 3),
         es_invasora=True,
         tipo=f["tipo"],
-        riesgo=f["riesgo"],
+        impacto_ambiental=f["impacto_ambiental"],
         autoridad=f["autoridad"],
         descripcion=f["descripcion"],
         alternativas=[(r["label"], round(float(r["score"]), 3)) for r in resultados[1:]],

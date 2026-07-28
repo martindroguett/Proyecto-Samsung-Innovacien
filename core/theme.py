@@ -12,12 +12,15 @@ CORTEZA = "#5C4A38"
 TERRACOTA = "#B4622F"
 TEXTO = "#2B2B26"
 
-# Colores por nivel de riesgo (se usan en el mapa y en las fichas)
-RIESGO_COLOR = {
+# Colores por nivel de impacto ambiental (se usan en el mapa y en las fichas)
+IMPACTO_COLOR = {
     "Alto": "#B4622F",     # terracota
     "Medio": "#C9A227",    # ocre
     "Bajo": "#4A7C59",     # verde
 }
+
+# Color de la etiqueta de especie portadora de enfermedades
+ENFERMEDAD_COLOR = "#8E3B46"  # burdeo, para distinguirla del impacto ambiental
 
 _CSS = f"""
 <style>
@@ -49,12 +52,64 @@ _CSS = f"""
       border-radius: 12px;
       padding: 0.9rem 1.1rem;
       margin-bottom: 0.7rem;
+      overflow: hidden;
+      height: 480px;
+      display: flex;
+      flex-direction: column;
   }}
-  .inv-card h4 {{ margin: 0 0 0.2rem 0; color: {VERDE_OSCURO}; }}
-  .inv-card .sci {{ font-style: italic; color: {CORTEZA}; font-size: 0.88rem; }}
-  .inv-card p {{ margin: 0.4rem 0 0 0; font-size: 0.9rem; color: {TEXTO}; }}
+  .inv-card h4 {{
+      margin: 0 0 0.2rem 0;
+      color: {VERDE_OSCURO};
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+  }}
+  .inv-card .sci {{
+      font-style: italic;
+      color: {CORTEZA};
+      font-size: 0.88rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+  }}
+  .inv-card p {{
+      margin: 0.4rem 0 0 0;
+      font-size: 0.9rem;
+      color: {TEXTO};
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      flex: 1;
+  }}
+  .inv-card .tags {{ display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.3rem; flex-shrink: 0; }}
 
-  /* ---- Etiquetas de riesgo ---- */
+  /* ---- Foto de la especie ---- */
+  .inv-foto {{
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      display: block;
+      flex-shrink: 0;
+  }}
+  .inv-foto-placeholder {{
+      width: 100%;
+      height: 260px;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      flex-shrink: 0;
+      background: {ARENA};
+      color: {CORTEZA};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+  }}
+
+  /* ---- Etiquetas (impacto ambiental / portador de enfermedades) ---- */
   .inv-tag {{
       display: inline-block;
       padding: 0.12rem 0.6rem;
@@ -103,18 +158,36 @@ def encabezado(titulo: str = "Proyecto Innovacien",
     )
 
 
-def tag_riesgo(nivel: str) -> str:
-    """Devuelve el HTML de una etiqueta de riesgo."""
-    color = RIESGO_COLOR.get(nivel, VERDE)
-    return f'<span class="inv-tag" style="background:{color}">Riesgo {nivel.lower()}</span>'
+def tag_impacto(nivel: str) -> str:
+    """Devuelve el HTML de una etiqueta de impacto ambiental."""
+    color = IMPACTO_COLOR.get(nivel, VERDE)
+    return f'<span class="inv-tag" style="background:{color}">Impacto {nivel.lower()}</span>'
 
 
-def ficha_especie(nombre: str, cientifico: str, riesgo: str, detalle: str = "") -> str:
-    """Devuelve el HTML de una ficha de especie."""
-    color = RIESGO_COLOR.get(riesgo, VERDE)
+def tag_enfermedad() -> str:
+    """Devuelve el HTML de la etiqueta de especie portadora de enfermedades."""
+    return f'<span class="inv-tag" style="background:{ENFERMEDAD_COLOR}">🦠 Portadora de enfermedades</span>'
+
+
+def ficha_especie(nombre: str, cientifico: str, impacto_ambiental: str, detalle: str = "",
+                  imagen_url: str | None = None, portador_enfermedades: bool = False) -> str:
+    """Devuelve el HTML de una ficha de especie, con foto y etiquetas."""
+    color = IMPACTO_COLOR.get(impacto_ambiental, VERDE)
+
+    if imagen_url:
+        foto_html = f'<img class="inv-foto" src="{imagen_url}" alt="{nombre}">'
+    else:
+        foto_html = '<div class="inv-foto-placeholder">📷 Sin foto disponible</div>'
+
+    tags = tag_impacto(impacto_ambiental)
+    if portador_enfermedades:
+        tags += tag_enfermedad()
+
     return f"""<div class="inv-card" style="border-left-color:{color}">
-                 <h4>{nombre} &nbsp;{tag_riesgo(riesgo)}</h4>
+                 {foto_html}
+                 <h4>{nombre}</h4>
                  <div class="sci">{cientifico}</div>
+                 <div class="tags">{tags}</div>
                  <p>{detalle}</p>
                </div>"""
 
