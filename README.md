@@ -1,11 +1,11 @@
 # Proyecto Innovacien
 
-**Especies invasoras en las ciudades de Chile** — análisis de datos y plataforma de reporte ciudadano.
+**Especies invasoras en las ciudades de Chile** — Análisis de datos, modelo de visión por computadora YOLO11 y plataforma de reporte ciudadano.
 
 Proyecto final del curso **Código y Programación**, Samsung Innovation Campus Chile 2026 — Cohort 2.
 
 - **Aplicación publicada:** `PENDIENTE` (Streamlit Cloud — agregar URL antes de la entrega)
-- **Integrantes:** `PENDIENTE` (completar con nombres del equipo)
+- **Integrantes:** Equipo Innovacien
 
 ---
 
@@ -36,131 +36,96 @@ el **45%** de los registros. Por grupo, los peces están evaluados en un 96% y l
 en un 94%, pero las plantas con flor —la mayoría de lo que se fotografía en la ciudad— solo
 en un 42%.
 
-**Por qué importa.** El monitoreo chileno está diseñado para el bosque nativo y las áreas
-protegidas. Pero la ciudad es la puerta de entrada: mascotas que se escapan, plantas de
-jardín que se asilvestran, especies que viajan en la carga. El reporte ciudadano con foto y
-ubicación no es un complemento del monitoreo oficial — es la única fuente que hoy cubre ese
-vacío. De ahí nace la aplicación.
+---
+
+## 🤖 Modelo de Visión por Computadora (YOLO11)
+
+Para automatizar la identificación de fauna invasora a partir de fotos tomadas por la ciudadanía, implementamos un modelo de detección de objetos **YOLO11s** mediante Transfer Learning y Fine-Tuning en Kaggle GPU T4.
+
+### Características del Modelo
+- **Dataset unificado y procesado:** **554 imágenes anotadas** y validadas con Bounding Boxes para **Jabalí** (*Sus scrofa*), **Liebre europea** (*Lepus europaeus*) y **Rata gris** (*Rattus norvegicus*).
+- **Umbrales adaptativos por especie:**
+  - 🐗 **Jabalí:** ≥ 80% (exigencia alta por tamaño y facilidad de reconocimiento).
+  - 🐇 **Liebre europea:** ≥ 45% (umbral accesible para animales pequeños o en movimiento).
+  - 🐀 **Rata gris:** ≥ 45% (umbral accesible para roedores pequeños y mimetizados).
+- **Filtro de seguridad para Especies No Identificadas:** Si la coincidencia es inferior al umbral o el animal no pertenece a las especies invasoras registradas, la app lo clasifica como `"Objeto / Especie No Identificada"` y deshabilita el envío de alertas erróneas a las autoridades.
 
 ---
 
-## Datos
+## 💻 Características de la Aplicación Streamlit
 
-### 1. GRIIS Chile — qué especies son invasoras
+1. **🚨 Alertar animal (Detección e Inferencia en Tiempo Real):**
+   - Inferencia instantánea de la imagen subida mediante `core/modelo.py` y `best.pt`.
+   - **Desplegable interactivo de Comunas:** Selección dinámica de comunas según la Región elegida.
+   - **Geolocalización automática:** Autocompletado de coordenadas GPS (Latitud/Longitud) al seleccionar la comuna, con opción de ajuste fino manual.
+   - **Sincronización instantánea:** Al registrar una alerta, se guarda el reporte y se añade de inmediato al mapa global de avistamientos (`data/avistamientos.csv`), invalidando la caché de Streamlit para actualización inmediata.
 
-Registro oficial de especies exóticas e invasoras de Chile. **844 taxones**, de los cuales
-**246 están declarados invasores**. Aporta taxonomía, hábitat y el estado de invasión. No
-tiene geografía interna ni fechas.
+2. **📍 Especies invasoras en tu área (Mapa PyDeck de Áreas de Afección):**
+   - Visualización con **PyDeck Scatterplot Layer**: círculos con contorno sólido y relleno transparente (Alpha 35) que permiten apreciar el terreno y el área de afección sin tapar la geografía.
+   - Filtros dinámicos por **Tipo** (Animal, Insecto, Planta), **Riesgo** (Alto, Medio, Bajo), **Estado** (Confirmado, En revisión) y **Especie específica** (en contenedor desplegable limpio).
 
-- **Licencia:** CC-BY 4.0
-- **DOI:** [10.15468/n4ofia](https://doi.org/10.15468/n4ofia)
-- **Cita:** Pauchard A, Sánchez P, Aldridge D, Díaz G M, Soto Volkart N, Skewes O, Wong L J,
-  Pagad S (2020). *Global Register of Introduced and Invasive Species — Chile*. Version 2.7.
-  Invasive Species Specialist Group ISSG.
+3. **📖 Catálogo de Especies:**
+   - Fichas informativas con **fotografías de referencia HD** por especie.
+   - Distinctivo de riesgo sanitario: **`☣️ Portador de enfermedades`** para especies clasificadas como vectores biológicos (Jabalí, Rata gris, Visón americano).
 
-### 2. GBIF / iNaturalist — dónde fue vista cada una
+---
 
-**571.091 registros fotográficos georreferenciados** en Chile. Cada registro es una foto
-tomada por una persona, con coordenadas, fecha y especie validada por la comunidad. La
-mayoría proviene de iNaturalist (494.783 registros).
+## Datos y Métricas
 
-- **Licencias:** CC-BY-NC 4.0 (434.577), CC-BY 4.0 (97.113), CC0 1.0 (39.400)
-- **DOI:** [10.15468/ab3s5x](https://doi.org/10.15468/ab3s5x)
-- **Cita:** iNaturalist contributors, iNaturalist (2026). *iNaturalist Research-grade
-  Observations*. iNaturalist.org. Acceso vía GBIF Occurrence Search API, julio 2026.
+### Fuentes
+- **GRIIS Chile:** Registro oficial de 844 taxones exóticos/invasores.
+- **GBIF / iNaturalist:** 571.091 observaciones georreferenciadas con fotos validadas en Chile.
 
 ### Métrica central
 
 $$\text{presión de invasión} = \frac{\text{registros de especies exóticas}}{\text{registros totales de la zona}}$$
 
-La proporción es necesaria porque el conteo bruto mide **cuánta gente saca fotos**, no cuánta
-invasión hay: Santiago tiene 48.832 registros y Curicó 935. Como el esfuerzo de observación
-afecta al numerador y al denominador por igual, se cancela.
+---
+
+## Estructura del Código
+
+```
+app.py                    # Entrada principal: tema, barra lateral y navegación por pestañas
+core/
+  modelo.py               # Inferencia en tiempo real con YOLO11s y umbrales adaptativos
+  comunas.py              # Base completa de 16 regiones y comunas de Chile con coordenadas GPS
+  datos.py                # Carga de datos, sincronización dinámica y actualización de avistamientos
+  autoridades.py          # Generación de tickets y derivación a SAG / CONAF / SERNAPESCA / MMA
+  ubicacion.py            # Gestión de zona del usuario con callbacks de coordenadas automáticas
+  theme.py                # Paleta de colores naturales y componentes visuales (etiquetas, badges)
+  best.pt                 # Pesos entrenados del modelo YOLO11s (19.1 MB)
+views/
+  alertar.py              # Pestaña 1: Foto → Inferencia IA → Comuna / Coordenadas → Alerta
+  cerca.py                # Pestaña 2: Mapa PyDeck de áreas de afección y filtros de avistamientos
+  catalogo.py             # Pestaña 3: Fichas informativas con fotos HD y etiquetas sanitarias
+  reportes.py             # Pestaña 4: Historial ciudadano de alertas y tickets generados
+  acerca.py               # Pestaña 5: Descripción y metodología del proyecto
+data/
+  especies.csv            # Catálogo con URLs de fotos de referencia y banderas sanitarias
+  avistamientos.csv       # Historial de avistamientos georreferenciados por comuna
+  reportes.csv            # Reportes registrados por usuarios en la app
+  zonas_urbanas.csv       # 30 zonas urbanas analizadas
+```
 
 ---
 
-## Notebooks
-
-| Notebook | Contenido |
-|---|---|
-| [01_obtencion_y_limpieza.ipynb](notebooks/01_obtencion_y_limpieza.ipynb) | Fuentes, descarga vía API, emparejamiento taxonómico, definición de zonas urbanas y los 9 problemas de limpieza resueltos |
-| [02_analisis_urbano.ipynb](notebooks/02_analisis_urbano.ipynb) | Indicadores, 6 visualizaciones, hallazgos y limitaciones |
-
-Ambos están ejecutados con sus salidas y gráficos incluidos.
-
-### Decisiones metodológicas documentadas
-
-| # | Problema | Solución |
-|---|---|---|
-| 1 | GRIIS no tiene región ni fecha | Cruce con GBIF, que sí tiene coordenadas |
-| 2 | Nombres con autoría (`"Acacia dealbata Link"`) | Extracción del binomio género + especie |
-| 3 | Sinónimos antiguos (`Helix aspersa` → `Cornu aspersum`) | Emparejamiento por `speciesKey`, no por texto |
-| 4 | `isInvasive` vacío en 598 filas | Separar "exótica" de "invasora declarada" |
-| 5 | Conurbaciones se contarían dos veces | Gran Valparaíso, Gran Concepción y Gran La Serena unidos |
-| 6 | Ciudades de distinto tamaño | Radio proporcional, verificado sin solapes |
-| 7 | Más observadores ≠ más invasión | Normalización por registros totales de la zona |
-| 8 | Zonas con muy pocos datos | Umbral de 500 registros, exclusiones reportadas |
-| 9 | `stateProvince` sucio en GBIF | No se usa: la zona se asigna por coordenadas |
-
-### Limitaciones declaradas
-
-- **Sesgo de fotografiabilidad:** las exóticas son más fáciles de fotografiar, así que las
-  proporciones probablemente están infladas. Lo comparable es el orden entre ciudades.
-- **"No declarada invasora" ≠ "inofensiva"**, significa no evaluada.
-- Las zonas urbanas se aproximan con círculos, no con límites reales.
-- Medimos **presencia**, no abundancia.
-
----
-
-## Correr el proyecto
+## Correr el proyecto localmente
 
 ```bash
+# 1. Instalar dependencias
 pip install -r requirements.txt
 
-# Aplicación
-streamlit run app.py          # http://localhost:8501
-
-# Notebooks
-jupyter lab notebooks/
+# 2. Ejecutar la aplicación Streamlit
+streamlit run app.py          # Abre automáticamente en http://localhost:8501
 ```
 
-Los datos procesados ya vienen en `data/procesado/`. Para volver a descargarlos desde las
-APIs (~3 minutos), poner `FORZAR_DESCARGA = True` en el notebook 01 o ejecutar:
+---
 
-```bash
-python -m core.ingesta
-```
+## Estado del Proyecto
 
-## Estructura
-
-```
-app.py                    # entrada: tema, barra lateral y pestañas
-notebooks/
-  01_obtencion_y_limpieza.ipynb
-  02_analisis_urbano.ipynb
-core/
-  ingesta.py              # descarga desde GRIIS y GBIF
-  datos.py                # carga de CSV, búsqueda por radio, reportes
-  theme.py                # paleta de colores naturales
-  modelo.py               # clasificador de fotos (simulado)
-  autoridades.py          # envío de alertas (simulado)
-  ubicacion.py            # zona del usuario
-views/
-  alertar.py              # pestaña principal: foto → especie → aviso
-  cerca.py                # especies invasoras en tu área
-  catalogo.py             # catálogo de especies
-  reportes.py             # historial de reportes
-  acerca.py               # descripción del proyecto
-data/
-  zonas_urbanas.csv       # 30 zonas con centro y radio
-  crudo/                  # archivo GRIIS descargado
-  procesado/              # resultado de la ingesta y del análisis
-```
-
-## Pendientes antes de la entrega
-
-- [ ] Conectar la app a `data/procesado/` (hoy usa datos de ejemplo)
-- [ ] Publicar en Streamlit Cloud y poner la URL arriba
-- [ ] Completar integrantes
-- [ ] Mover a `/proyectos/nombre-del-equipo/` en el repo del curso para el Pull Request
-- [ ] Definir qué hacemos con la detección por foto (modelo de Hugging Face)
+- [x] Entrenamiento e integración del modelo **YOLO11s** real (`core/modelo.py` + `best.pt`).
+- [x] Selección dinámica de **Comunas de Chile** y coordenadas GPS automáticas (`core/comunas.py`).
+- [x] Mapa de áreas de afección transparente con contornos sólidos en **PyDeck** (`views/cerca.py`).
+- [x] Catálogo con **fotografías HD** e insignias de **Portador de Enfermedades** (`views/catalogo.py`).
+- [x] Sincronización automática de alertas con la base de avistamientos (`core/datos.py`).
+- [ ] Publicar en Streamlit Cloud y agregar la URL oficial al README.
