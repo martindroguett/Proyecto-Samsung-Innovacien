@@ -26,7 +26,6 @@ NIVELES_RIESGO = ["Alto", "Medio", "Bajo"]
 
 # Punto de referencia por region, para centrar el mapa mientras no tengamos
 # geolocalizacion del navegador.
-# TODO (equipo): completar con todas las regiones del pais.
 REGIONES = {
     "Arica y Parinacota": (-18.478, -70.321),
     "Tarapaca": (-20.214, -70.152),
@@ -79,14 +78,69 @@ def cargar_reportes() -> pd.DataFrame:
 # Escritura
 # --------------------------------------------------------------------------
 def guardar_reporte(reporte: dict) -> None:
-    """Agrega un reporte al CSV local.
-
-    TODO (equipo): migrar a una base de datos real (Supabase / Postgres /
-    Google Sheets) para que los reportes se compartan entre usuarios.
-    """
+    """Agrega un reporte al CSV local de reportes y sincroniza con avistamientos.csv."""
     df = pd.DataFrame([reporte])
     existe = CSV_REPORTES.exists()
     df.to_csv(CSV_REPORTES, mode="a", header=not existe, index=False)
+
+    # Sincronizar automaticamente el nuevo reporte en avistamientos.csv
+    try:
+        guardar_avistamiento(
+            especie_nombre_o_id=reporte.get("especie", ""),
+            region=reporte.get("region", ""),
+            comuna=reporte.get("comuna", ""),
+            lat=float(reporte.get("lat", 0) or 0),
+            lon=float(reporte.get("lon", 0) or 0),
+            fecha=datetime.now().strftime("%Y-%m-%d"),
+            estado="En revision",
+        )
+    except Exception:
+        pass
+
+
+def guardar_avistamiento(especie_nombre_o_id: str | int, region: str, comuna: str,
+                        lat: float, lon: float, fecha: str = "", estado: str = "En revision") -> dict:
+    """Agrega un nuevo registro a data/avistamientos.csv y refresca la cache de Streamlit."""
+    especie_id = None
+    if isinstance(especie_nombre_o_id, int) or (isinstance(especie_nombre_o_id, str) and especie_nombre_o_id.isdigit()):
+        especie_id = int(especie_nombre_o_id)
+    else:
+        info = especie_por_nombre(str(especie_nombre_o_id))
+        especie_id = info["id"] if info else None
+
+    # Si la especie no se encuentra en el catalogo, se asigna 1 por defecto
+    if especie_id is None:
+        especie_id = 1
+
+    if not fecha:
+        fecha = datetime.now().strftime("%Y-%m-%d")
+
+    # Obtener el siguiente ID unico
+    if CSV_AVISTAMIENTOS.exists():
+        df_existente = pd.read_csv(CSV_AVISTAMIENTOS)
+        nuevo_id = int(df_existente["id"].max() + 1) if not df_existente.empty else 1
+    else:
+        nuevo_id = 1
+
+    nuevo_avistamiento = {
+        "id": nuevo_id,
+        "especie_id": especie_id,
+        "region": region,
+        "comuna": comuna,
+        "lat": round(lat, 4),
+        "lon": round(lon, 4),
+        "fecha": fecha,
+        "estado": estado,
+    }
+
+    df = pd.DataFrame([nuevo_avistamiento])
+    existe = CSV_AVISTAMIENTOS.exists()
+    df.to_csv(CSV_AVISTAMIENTOS, mode="a", header=not existe, index=False)
+
+    # Invalida el cache para que el mapa y los componentes de Streamlit muestren los nuevos datos de inmediato
+    cargar_avistamientos.clear()
+
+    return nuevo_avistamiento
 
 
 def guardar_imagen(archivo, prefijo: str = "obs") -> str:

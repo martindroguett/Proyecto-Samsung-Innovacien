@@ -34,3 +34,6 @@ id,especie_id,region,comuna,lat,lon,fecha,estado
 33,15,Aysen,Rio Ibanez,-46.293,-71.938,2026-06-13,Confirmado
 34,15,Los Lagos,Puerto Varas,-41.319,-72.985,2026-07-04,Confirmado
 35,2,Chiloe,Ancud,-41.868,-73.830,2026-07-22,En revision
+36,3,Metropolitana,Lampa,-33.447,-70.66,2026-07-28,En revision
+37,3,Los Rios,Los Lagos,-39.85,-72.8167,2026-07-28,En revision
+38,3,Aysen,Tortel,-47.7833,-73.5333,2026-07-29,En revision

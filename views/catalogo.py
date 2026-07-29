@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from core import datos
-from core.theme import ficha_especie, pendiente
+from core.theme import tag_riesgo, tag_sanitaria, pendiente
 
 
 def render() -> None:
     st.subheader("Catalogo de especies")
-    st.write("Fichas de las especies que la plataforma puede reconocer.")
+    st.write("Fichas e imagenes de referencia de las especies reconocidas por la plataforma.")
 
     especies = datos.cargar_especies()
 
@@ -28,18 +29,27 @@ def render() -> None:
     if tipo != "Todos":
         filtradas = filtradas[filtradas["tipo"] == tipo]
 
-    st.caption(f"{len(filtradas)} de {len(especies)} especies")
+    st.caption(f"Mostrando {len(filtradas)} de {len(especies)} especies")
 
-    columnas = st.columns(2, gap="medium")
+    columnas = st.columns(2, gap="large")
     for i, (_, f) in enumerate(filtradas.iterrows()):
-        detalle = f"{f['descripcion']}<br><b>Autoridad:</b> {f['autoridad']}"
         with columnas[i % 2]:
-            st.markdown(
-                ficha_especie(f["nombre_comun"], f["nombre_cientifico"], f["riesgo"], detalle),
-                unsafe_allow_html=True,
-            )
+            with st.container(border=True):
+                # Imagen de referencia por especie
+                img_url = f.get("imagen_url")
+                if pd.notna(img_url) and img_url:
+                    st.image(str(img_url), use_container_width=True, caption=f"{f['nombre_comun']} ({f['nombre_cientifico']})")
+
+                # Titulo y Etiquetas de Riesgo / Sanitaria
+                es_vector = str(f.get("portador_enfermedades", "")).strip().lower() in ["si", "sí", "true", "1"]
+                tag_vect = f" &nbsp;{tag_sanitaria()}" if es_vector else ""
+
+                st.markdown(f"#### {f['nombre_comun']}")
+                st.markdown(f"*{f['nombre_cientifico']}* &nbsp;|&nbsp; {tag_riesgo(f['riesgo'])}{tag_vect}", unsafe_allow_html=True)
+                st.write(f['descripcion'])
+                st.caption(f"🏛️ **Autoridad competente:** {f['autoridad']} &nbsp;|&nbsp; 🏷️ **Tipo:** {f['tipo']}")
 
     st.divider()
     st.markdown("##### Set de imagenes de entrenamiento")
     pendiente("subir nuestras fotos a <code>data/imagenes/&lt;nombre_especie&gt;/</code> "
-              "y registrar cuantas hay por especie. Ver <code>data/imagenes/README.md</code>.")
+              "y registrar cuantas hay por especie.")

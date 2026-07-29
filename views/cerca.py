@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+import pandas as pd
+import pydeck as pdk
 import streamlit as st
 
 from core import datos, ubicacion
 from core.theme import RIESGO_COLOR, ficha_especie, pendiente
+
+COLOR_RGB = {
+    "Alto": [210, 50, 40],       # Terracota / Rojo
+    "Medio": [215, 160, 30],     # Ocre / Amarillo
+    "Bajo": [74, 124, 89],       # Verde
+}
 
 
 def render() -> None:
@@ -16,6 +24,7 @@ def render() -> None:
 
     cerca = datos.avistamientos_cerca(ubi["lat"], ubi["lon"], ubi["radio_km"])
 
+    # Filtros principales en fila limpia de 3 columnas
     filtros = st.columns([1, 1, 1])
     tipos = filtros[0].multiselect("Tipo", datos.TIPOS, default=datos.TIPOS)
     riesgos = filtros[1].multiselect("Riesgo", datos.NIVELES_RIESGO, default=datos.NIVELES_RIESGO)
@@ -23,14 +32,28 @@ def render() -> None:
                                      ["Confirmado", "En revision", "Descartado"],
                                      default=["Confirmado", "En revision"])
 
+    # Filtro de Especie opcional (compacto en desplegable para no ensuciar la vista)
+    especies_disponibles = sorted(datos.cargar_especies()["nombre_comun"].unique().tolist())
+    with st.expander("🔍 Filtrar por especie específica (opcional)", expanded=False):
+        especies_filtro = st.multiselect(
+            "Seleccionar especies a mostrar",
+            especies_disponibles,
+            default=[],
+            placeholder="Mostrar todas las especies (selecciona aquí solo si deseas filtrar especies específicas)"
+        )
+
     if not cerca.empty:
         cerca = cerca[cerca["tipo"].isin(tipos)
                       & cerca["riesgo"].isin(riesgos)
                       & cerca["estado"].isin(estados)]
 
+        # Solo filtrar por especie si el usuario selecciono especies especificas
+        if especies_filtro:
+            cerca = cerca[cerca["nombre_comun"].isin(especies_filtro)]
+
     if cerca.empty:
         st.info("Sin registros para esos filtros en tu zona. Prueba ampliando el radio "
-                "en la barra lateral.")
+                "en la barra lateral o ajustando los filtros superiores.")
         pendiente("cargar la base real de avistamientos (hoy son datos de ejemplo).")
         return
 
@@ -39,7 +62,7 @@ def render() -> None:
 
     col_mapa, col_lista = st.columns([1.3, 1], gap="large")
     with col_mapa:
-        _mapa(cerca)
+        _mapa(cerca, ubi["lat"], ubi["lon"])
     with col_lista:
         _lista(cerca)
 
@@ -63,13 +86,48 @@ def _resumen(cerca) -> None:
     c4.metric("Mas cercano", f"{cerca['distancia_km'].min():.0f} km")
 
 
-def _mapa(cerca) -> None:
-    st.markdown("##### Mapa de avistamientos")
+def _mapa(cerca, lat_center: float, lon_center: float) -> None:
+    st.markdown("##### Mapa de avistamientos (Áreas de afección)")
     df = cerca.copy()
-    df["color"] = df["riesgo"].map(RIESGO_COLOR).fillna("#4A7C59")
-    df["tamano"] = df["riesgo"].map({"Alto": 9000, "Medio": 6000, "Bajo": 4000}).fillna(4000)
-    st.map(df, latitude="lat", longitude="lon", color="color", size="tamano")
-    st.caption("🔴 riesgo alto · 🟡 riesgo medio · 🟢 riesgo bajo")
+
+    # Alpha 35 para fondo transparente que permite ver la zona geografica afectada
+    df["fill_color"] = df["riesgo"].map(lambda r: COLOR_RGB.get(r, [74, 124, 89]) + [35])
+    # Alpha 255 para contorno limpio y definido
+    df["line_color"] = df["riesgo"].map(lambda r: COLOR_RGB.get(r, [74, 124, 89]) + [255])
+    df["radius"] = df["riesgo"].map({"Alto": 8000, "Medio": 5000, "Bajo": 3000}).fillna(4000)
+
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=df,
+        get_position=["lon", "lat"],
+        get_fill_color="fill_color",
+        get_line_color="line_color",
+        get_radius="radius",
+        stroked=True,
+        filled=True,
+        line_width_min_pixels=2,
+        pickable=True,
+    )
+
+    view_state = pdk.ViewState(
+        latitude=lat_center,
+        longitude=lon_center,
+        zoom=7,
+        pitch=0,
+    )
+
+    st.pydeck_chart(
+        pdk.Deck(
+            layers=[layer],
+            initial_view_state=view_state,
+            tooltip={
+                "html": "<b>{nombre_comun}</b> (<i>{nombre_cientifico}</i>)<br/>"
+                        "📍 {comuna}, {region}<br/>"
+                        "⚠️ Riesgo: <b>{riesgo}</b> | Estado: {estado}"
+            },
+        )
+    )
+    st.caption("🔴 Riesgo alto &nbsp; 🟡 Riesgo medio &nbsp; 🟢 Riesgo bajo &nbsp; (contorno sólido con área transparente)")
 
 
 def _lista(cerca) -> None:
@@ -80,7 +138,8 @@ def _lista(cerca) -> None:
     for _, f in resumen.iterrows():
         detalle = (f"A {f['distancia_km']:.0f} km · {f['comuna']}, {f['region']} · "
                    f"visto el {f['fecha']:%d-%m-%Y} · {f['estado']}")
+        es_vector = str(f.get("portador_enfermedades", "")).strip().lower() in ["si", "sí", "true", "1"]
         st.markdown(
-            ficha_especie(f["nombre_comun"], f["nombre_cientifico"], f["riesgo"], detalle),
+            ficha_especie(f["nombre_comun"], f["nombre_cientifico"], f["riesgo"], detalle, es_vector=es_vector),
             unsafe_allow_html=True,
         )

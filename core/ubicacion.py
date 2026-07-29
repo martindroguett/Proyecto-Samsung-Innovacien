@@ -1,8 +1,6 @@
 """Ubicacion del usuario, compartida por todas las pestanas.
 
 Hoy la region se elige a mano en la barra lateral.
-TODO (equipo): detectar la ubicacion desde el navegador (componente de
-geolocalizacion o streamlit-js-eval) y usarla como valor por defecto.
 """
 
 from __future__ import annotations
@@ -14,23 +12,46 @@ from core.datos import REGIONES
 REGION_POR_DEFECTO = "Metropolitana"
 
 
+def _al_cambiar_region():
+    """Callback que actualiza automaticamente las coordenadas al cambiar de region."""
+    reg = st.session_state.get("ubi_region")
+    if reg and reg in REGIONES:
+        lat_ref, lon_ref = REGIONES[reg]
+        st.session_state["ubi_lat"] = float(lat_ref)
+        st.session_state["ubi_lon"] = float(lon_ref)
+
+
 def selector_sidebar() -> dict:
     """Dibuja el selector de zona en la barra lateral y devuelve la ubicacion."""
     with st.sidebar:
         st.markdown("### 📍 Tu zona")
+
+        if "ubi_region" not in st.session_state:
+            st.session_state["ubi_region"] = REGION_POR_DEFECTO
+
+        reg_actual = st.session_state.get("ubi_region", REGION_POR_DEFECTO)
+        lat_ref, lon_ref = REGIONES.get(reg_actual, REGIONES[REGION_POR_DEFECTO])
+
+        if "ubi_lat" not in st.session_state:
+            st.session_state["ubi_lat"] = float(lat_ref)
+        if "ubi_lon" not in st.session_state:
+            st.session_state["ubi_lon"] = float(lon_ref)
+
+        idx_reg = list(REGIONES).index(reg_actual) if reg_actual in REGIONES else 0
+
         region = st.selectbox(
             "Region",
             list(REGIONES),
-            index=list(REGIONES).index(REGION_POR_DEFECTO),
+            index=idx_reg,
             key="ubi_region",
+            on_change=_al_cambiar_region,
         )
-        lat_ref, lon_ref = REGIONES[region]
 
         radio = st.slider("Radio de busqueda (km)", 25, 500, 150, step=25, key="ubi_radio")
 
         with st.expander("Ajustar coordenadas"):
-            lat = st.number_input("Latitud", value=float(lat_ref), format="%.4f", key="ubi_lat")
-            lon = st.number_input("Longitud", value=float(lon_ref), format="%.4f", key="ubi_lon")
+            lat = st.number_input("Latitud", format="%.4f", key="ubi_lat")
+            lon = st.number_input("Longitud", format="%.4f", key="ubi_lon")
 
         st.caption("Los datos mostrados son de ejemplo mientras cargamos la base real.")
 
@@ -40,7 +61,7 @@ def selector_sidebar() -> dict:
 def actual() -> dict:
     """Ubicacion vigente, para usar desde cualquier vista."""
     region = st.session_state.get("ubi_region", REGION_POR_DEFECTO)
-    lat_ref, lon_ref = REGIONES[region]
+    lat_ref, lon_ref = REGIONES.get(region, REGIONES[REGION_POR_DEFECTO])
     return {
         "region": region,
         "lat": st.session_state.get("ubi_lat", lat_ref),

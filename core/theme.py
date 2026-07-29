@@ -54,10 +54,10 @@ _CSS = f"""
   .inv-card .sci {{ font-style: italic; color: {CORTEZA}; font-size: 0.88rem; }}
   .inv-card p {{ margin: 0.4rem 0 0 0; font-size: 0.9rem; color: {TEXTO}; }}
 
-  /* ---- Etiquetas de riesgo ---- */
+  /* ---- Etiquetas ---- */
   .inv-tag {{
       display: inline-block;
-      padding: 0.12rem 0.6rem;
+      padding: 0.15rem 0.6rem;
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 600;
@@ -109,11 +109,17 @@ def tag_riesgo(nivel: str) -> str:
     return f'<span class="inv-tag" style="background:{color}">Riesgo {nivel.lower()}</span>'
 
 
-def ficha_especie(nombre: str, cientifico: str, riesgo: str, detalle: str = "") -> str:
+def tag_sanitaria() -> str:
+    """Devuelve el HTML de la etiqueta de portador de enfermedades."""
+    return '<span class="inv-tag" style="background:#A71D2A;">☣️ Portador de enfermedades</span>'
+
+
+def ficha_especie(nombre: str, cientifico: str, riesgo: str, detalle: str = "", es_vector: bool = False) -> str:
     """Devuelve el HTML de una ficha de especie."""
     color = RIESGO_COLOR.get(riesgo, VERDE)
+    vector_html = f" &nbsp;{tag_sanitaria()}" if es_vector else ""
     return f"""<div class="inv-card" style="border-left-color:{color}">
-                 <h4>{nombre} &nbsp;{tag_riesgo(riesgo)}</h4>
+                 <h4>{nombre} &nbsp;{tag_riesgo(riesgo)}{vector_html}</h4>
                  <div class="sci">{cientifico}</div>
                  <p>{detalle}</p>
                </div>"""

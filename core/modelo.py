@@ -1,41 +1,31 @@
-"""Clasificador de especies.
-
-Estado actual: SIMULADO. Devuelve un resultado deterministico a partir del
-contenido de la imagen, para poder construir y demostrar la interfaz.
-
-TODO (equipo) — conectar el modelo real:
-  1. Elegir/entrenar el modelo en Hugging Face y poner su id en MODELO_HF.
-  2. Instalar las dependencias opcionales de requirements.txt.
-  3. Activar el modelo real con la variable de entorno INNOVACIEN_MODELO=hf
-     (o cambiar USAR_MODELO_REAL a True).
-  4. Mapear las etiquetas del modelo a los nombres del catalogo (data/especies.csv)
-     en MAPA_ETIQUETAS.
-"""
+"""Clasificador de especies utilizando el modelo YOLO11 real entrenado."""
 
 from __future__ import annotations
 
-import hashlib
-import os
+import io
+from pathlib import Path
 from dataclasses import dataclass, field
-
 import streamlit as st
+from PIL import Image
 
 from core.datos import cargar_especies
 
-# Candidato inicial: modelo generico de clasificacion de imagenes.
-# TODO (equipo): reemplazar por nuestro modelo fine-tuneado con las fotos propias.
-MODELO_HF = "google/vit-base-patch16-224"
+RUTA_LOCAL_KAGGLE = Path(r"C:\Users\rapha\Documents\Samsung\resultados_entrenamiento\weights\best.pt")
+MODELO_PATH = Path(__file__).parent / "best.pt"
+if not MODELO_PATH.exists() and RUTA_LOCAL_KAGGLE.exists():
+    MODELO_PATH = RUTA_LOCAL_KAGGLE
 
-USAR_MODELO_REAL = os.getenv("INNOVACIEN_MODELO", "").lower() == "hf"
+MODELO_HF = "YOLO11s (Entrenado en Kaggle - 554 imágenes)"
+USAR_MODELO_REAL = True
 
-# Etiqueta que devuelve el modelo -> nombre_comun en data/especies.csv
-# TODO (equipo): completar cuando sepamos las etiquetas reales del modelo.
+# Mapeo de etiquetas del modelo -> nombre_comun en data/especies.csv
 MAPA_ETIQUETAS: dict[str, str] = {
-    # "beaver": "Castor americano",
-    # "wild_boar": "Jabali",
+    "jabali": "Jabali",
+    "liebre": "Liebre europea",
+    "rata gris": "Rata gris",
 }
 
-UMBRAL_CONFIANZA = 0.60  # bajo este valor pedimos revision humana
+UMBRAL_CONFIANZA = 0.50  # Confianza mínima para considerar detección válida
 
 
 @dataclass
@@ -49,105 +39,92 @@ class Prediccion:
     autoridad: str = "SAG"
     descripcion: str = ""
     alternativas: list[tuple[str, float]] = field(default_factory=list)
-    simulado: bool = True
+    simulado: bool = False
 
     @property
     def confiable(self) -> bool:
         return self.confianza >= UMBRAL_CONFIANZA
 
 
-# --------------------------------------------------------------------------
-# API publica
-# --------------------------------------------------------------------------
+@st.cache_resource(show_spinner="Cargando modelo de IA...")
+def _cargar_modelo():
+    from ultralytics import YOLO
+    if not MODELO_PATH.exists():
+        raise FileNotFoundError(f"No se encontró el modelo en {MODELO_PATH}")
+    return YOLO(str(MODELO_PATH))
+
+
 def clasificar(imagen_bytes: bytes) -> Prediccion:
-    """Clasifica una foto y devuelve la especie mas probable."""
-    if USAR_MODELO_REAL:
-        return _clasificar_hf(imagen_bytes)
-    return _clasificar_simulado(imagen_bytes)
+    """Clasifica una foto usando el modelo YOLO11 entrenado."""
+    try:
+        model = _cargar_modelo()
+        imagen = Image.open(io.BytesIO(imagen_bytes)).convert("RGB")
 
+        # Inferencia con YOLO
+        results = model.predict(source=imagen, conf=0.20, verbose=False)
+        res = results[0]
+        boxes = res.boxes
 
-# --------------------------------------------------------------------------
-# Implementacion simulada (la que corre hoy)
-# --------------------------------------------------------------------------
-def _clasificar_simulado(imagen_bytes: bytes) -> Prediccion:
-    """Elige una especie del catalogo segun el hash de la imagen.
+        if boxes is None or len(boxes) == 0:
+            return Prediccion(
+                especie="No identificada",
+                confianza=0.0,
+                es_invasora=False,
+                descripcion="No se detecto ninguna especie invasora conocida en la imagen.",
+                simulado=False,
+            )
 
-    La misma foto siempre da el mismo resultado, asi las demos son estables.
-    """
-    especies = cargar_especies()
-    semilla = int(hashlib.sha256(imagen_bytes).hexdigest(), 16)
+        # Ordenar por confianza y tomar la mayor
+        boxes_sorted = sorted(boxes, key=lambda b: float(b.conf[0]), reverse=True)
+        top_box = boxes_sorted[0]
+        clase_id = int(top_box.cls[0])
+        nombre_raw = model.names[clase_id]
+        confianza = float(top_box.conf[0])
 
-    idx = semilla % len(especies)
-    fila = especies.iloc[idx]
-    confianza = 0.55 + (semilla % 4400) / 10000  # 0.55 - 0.99
+        # Nombre común según nuestro mapa
+        nombre_comun = MAPA_ETIQUETAS.get(nombre_raw, nombre_raw.title())
 
-    # Dos alternativas distintas a la principal.
-    otras_idx = [i for i in ((idx + 1 + semilla % 3) % len(especies),
-                             (idx + 4 + semilla % 5) % len(especies))
-                 if i != idx][:2]
-    alternativas = [
-        (especies.iloc[i]["nombre_comun"], round(max(0.02, (1 - confianza) * peso), 3))
-        for i, peso in zip(otras_idx, (0.6, 0.3))
-    ]
+        # Buscar ficha en el catálogo CSV de especies
+        especies = cargar_especies()
+        ficha = especies[especies["nombre_comun"].str.lower() == nombre_comun.lower()]
 
-    return Prediccion(
-        especie=fila["nombre_comun"],
-        confianza=round(confianza, 3),
-        es_invasora=True,  # todo el catalogo de ejemplo es invasor
-        tipo=fila["tipo"],
-        riesgo=fila["riesgo"],
-        autoridad=fila["autoridad"],
-        descripcion=fila["descripcion"],
-        alternativas=alternativas,
-        simulado=True,
-    )
+        # Alternativas de otras detecciones en la foto
+        alternativas = []
+        for b in boxes_sorted[1:]:
+            c_name = MAPA_ETIQUETAS.get(model.names[int(b.cls[0])], model.names[int(b.cls[0])])
+            alternativas.append((c_name, round(float(b.conf[0]), 3)))
 
+        if ficha.empty:
+            return Prediccion(
+                especie=nombre_comun,
+                confianza=round(confianza, 3),
+                es_invasora=True,
+                tipo="Animal",
+                riesgo="Alto",
+                autoridad="SAG",
+                alternativas=alternativas,
+                simulado=False,
+            )
 
-# --------------------------------------------------------------------------
-# Implementacion real con Hugging Face (pendiente de activar)
-# --------------------------------------------------------------------------
-@st.cache_resource(show_spinner="Cargando modelo…")
-def _cargar_pipeline():
-    """Carga el pipeline de Hugging Face una sola vez por sesion del servidor."""
-    from transformers import pipeline  # import diferido: dependencia opcional
-
-    return pipeline("image-classification", model=MODELO_HF)
-
-
-def _clasificar_hf(imagen_bytes: bytes) -> Prediccion:
-    import io
-
-    from PIL import Image
-
-    clasificador = _cargar_pipeline()
-    imagen = Image.open(io.BytesIO(imagen_bytes)).convert("RGB")
-    resultados = clasificador(imagen, top_k=3)
-
-    mejor = resultados[0]
-    nombre = MAPA_ETIQUETAS.get(mejor["label"], mejor["label"])
-
-    especies = cargar_especies()
-    ficha = especies[especies["nombre_comun"].str.lower() == nombre.lower()]
-
-    if ficha.empty:
-        # El modelo reconocio algo que no esta en nuestro catalogo de invasoras.
+        f = ficha.iloc[0]
         return Prediccion(
-            especie=nombre,
-            confianza=round(float(mejor["score"]), 3),
-            es_invasora=False,
-            alternativas=[(r["label"], round(float(r["score"]), 3)) for r in resultados[1:]],
+            especie=f["nombre_comun"],
+            confianza=round(confianza, 3),
+            es_invasora=True,
+            tipo=f.get("tipo", "Animal"),
+            riesgo=f.get("riesgo", "Alto"),
+            autoridad=f.get("autoridad", "SAG"),
+            descripcion=f.get("descripcion", ""),
+            alternativas=alternativas,
             simulado=False,
         )
 
-    f = ficha.iloc[0]
-    return Prediccion(
-        especie=f["nombre_comun"],
-        confianza=round(float(mejor["score"]), 3),
-        es_invasora=True,
-        tipo=f["tipo"],
-        riesgo=f["riesgo"],
-        autoridad=f["autoridad"],
-        descripcion=f["descripcion"],
-        alternativas=[(r["label"], round(float(r["score"]), 3)) for r in resultados[1:]],
-        simulado=False,
-    )
+    except Exception as e:
+        st.error(f"Error en la inferencia del modelo: {e}")
+        return Prediccion(
+            especie="Error de deteccion",
+            confianza=0.0,
+            es_invasora=False,
+            descripcion=str(e),
+            simulado=False,
+        )

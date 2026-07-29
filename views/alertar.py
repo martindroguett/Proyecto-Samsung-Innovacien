@@ -5,6 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 from core import autoridades, datos, modelo, ubicacion
+from core.comunas import obtener_comunas, obtener_coordenadas
 from core.theme import pendiente, tag_riesgo
 
 
@@ -110,15 +111,33 @@ def _formulario_alerta(pred) -> None:
     st.caption(f"Destinatario: **{pred.autoridad}** — {org['nombre']} ({org['ambito']})")
 
     ubi = ubicacion.actual()
-    with st.form("form_alerta"):
-        c1, c2 = st.columns(2)
-        region = c1.selectbox("Region", list(datos.REGIONES),
-                              index=list(datos.REGIONES).index(ubi["region"]))
-        comuna = c2.text_input("Comuna o sector")
 
+    # Desplegables interactivos de Region y Comuna
+    c1, c2 = st.columns(2)
+    regiones_lista = list(datos.REGIONES)
+    index_reg = regiones_lista.index(ubi["region"]) if ubi["region"] in regiones_lista else 0
+
+    region = c1.selectbox(
+        "Region",
+        regiones_lista,
+        index=index_reg,
+        key="form_alerta_region"
+    )
+
+    lista_comunas = obtener_comunas(region)
+    comuna = c2.selectbox(
+        "Comuna",
+        lista_comunas,
+        key="form_alerta_comuna"
+    )
+
+    # Coordenadas predeterminadas segun la comuna seleccionada
+    lat_def, lon_def = obtener_coordenadas(region, comuna)
+
+    with st.form("form_alerta"):
         c3, c4 = st.columns(2)
-        lat = c3.number_input("Latitud", value=float(ubi["lat"]), format="%.4f")
-        lon = c4.number_input("Longitud", value=float(ubi["lon"]), format="%.4f")
+        lat = c3.number_input("Latitud", value=float(lat_def), format="%.4f")
+        lon = c4.number_input("Longitud", value=float(lon_def), format="%.4f")
 
         contacto = st.text_input("Tu correo o telefono (opcional)")
         comentario = st.text_area("Comentario para la autoridad",
