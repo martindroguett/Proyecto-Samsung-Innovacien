@@ -68,26 +68,27 @@ def _seccion_resultado() -> None:
         st.caption("⚠️ Resultado simulado: el modelo real todavia no esta conectado.")
 
     if pred.es_invasora:
-        st.error(f"**{pred.especie}** — especie invasora", icon="🚨")
+        st.error(f"**{pred.especie}** — Especie invasora confirmada", icon="🚨")
     else:
-        st.success(f"**{pred.especie}** — no esta en el catalogo de invasoras", icon="✅")
+        st.info(f"**{pred.especie}** — No confirmada como especie invasora", icon="❓")
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("Confianza", f"{pred.confianza * 100:.0f}%")
+    c1.metric("Confianza", f"{pred.confianza * 100:.1f}%")
     c2.metric("Tipo", pred.tipo)
     c3.metric("Riesgo", pred.riesgo)
 
-    if not pred.confiable:
-        st.warning("Confianza baja. Conviene una segunda foto o revision de un especialista.")
+    if not pred.es_invasora and pred.confianza > 0:
+        st.caption("ℹ️ El modelo requiere fotos cercanas para validar la detección con certeza.")
 
     if pred.descripcion:
-        st.markdown(tag_riesgo(pred.riesgo), unsafe_allow_html=True)
+        if pred.es_invasora:
+            st.markdown(tag_riesgo(pred.riesgo), unsafe_allow_html=True)
         st.write(pred.descripcion)
 
     if pred.alternativas:
-        with st.expander("Otras coincidencias posibles"):
+        with st.expander("Coincidencias o alternativas registradas"):
             for nombre, score in pred.alternativas:
-                st.write(f"- {nombre} — {score * 100:.0f}%")
+                st.write(f"- {nombre} — {score * 100:.1f}%")
 
     if pred.es_invasora:
         st.divider()
