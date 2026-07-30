@@ -12,12 +12,37 @@ CORTEZA = "#5C4A38"
 TERRACOTA = "#B4622F"
 TEXTO = "#2B2B26"
 
-# Colores por nivel de riesgo (se usan en el mapa y en las fichas)
+# Colores por nivel de riesgo (se usan en las fichas y etiquetas)
 RIESGO_COLOR = {
     "Alto": "#B4622F",     # terracota
     "Medio": "#C9A227",    # ocre
     "Bajo": "#4A7C59",     # verde
 }
+
+# Identidad de especie para las visualizaciones (mapa y graficos).
+#
+# La paleta natural de la marca (verdes y terracotas) no sirve para codificar
+# categorias: sus verdes apagados quedan bajo el piso de croma —se leen como
+# gris— y el par naranja/verde es justamente el que la daltonia rojo-verde
+# vuelve indistinguible. Estos tres hues pasan los seis checks de contraste y
+# separacion CVD en modo claro y oscuro, en todos los pares.
+#
+# La marca sigue vistiendo la interfaz; los datos usan colores verificados.
+ESPECIE_COLOR = {
+    "Jabali": "#EB6834",          # naranja
+    "Liebre europea": "#2A78D6",  # azul
+    "Rata gris": "#1BAF7A",       # aqua
+}
+
+ESPECIE_RGB = {
+    "Jabali": [235, 104, 52],
+    "Liebre europea": [42, 120, 214],
+    "Rata gris": [27, 175, 122],
+}
+
+# El aqua queda bajo 3:1 contra la superficie clara, asi que la identidad nunca
+# va solo en el color: leyenda visible y tabla de datos siempre presentes.
+GRIS_NEUTRO = "#8A8A82"
 
 _CSS = f"""
 <style>

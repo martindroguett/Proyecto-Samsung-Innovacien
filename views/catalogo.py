@@ -1,55 +1,123 @@
-"""Pestana: catalogo de especies invasoras y estado del set de entrenamiento."""
+"""Pestana: catalogo de las tres especies que reconoce el modelo."""
 
 from __future__ import annotations
+
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
 from core import datos
-from core.theme import tag_riesgo, tag_sanitaria, pendiente
+from core.theme import ESPECIE_COLOR, tag_riesgo, tag_sanitaria
+
+RAIZ = Path(__file__).resolve().parent.parent
+CSV_RESUMEN = RAIZ / "data" / "procesado" / "resumen_especie.csv"
+CSV_FOTOS = RAIZ / "data" / "procesado" / "fotos_muestra.csv"
+
+
+@st.cache_data
+def _resumen() -> pd.DataFrame:
+    """Metricas por especie que dejo el pipeline de ingesta."""
+    if not CSV_RESUMEN.exists():
+        return pd.DataFrame()
+    return pd.read_csv(CSV_RESUMEN)
+
+
+@st.cache_data
+def _fotos() -> pd.DataFrame:
+    if not CSV_FOTOS.exists():
+        return pd.DataFrame()
+    return pd.read_csv(CSV_FOTOS)
 
 
 def render() -> None:
     st.subheader("Catalogo de especies")
-    st.write("Fichas e imagenes de referencia de las especies reconocidas por la plataforma.")
+    st.write("Las tres especies que el modelo sabe reconocer. El catalogo, el mapa "
+             "y el analisis se limitan a estas tres.")
 
     especies = datos.cargar_especies()
+    resumen = _resumen()
+    fotos = _fotos()
 
-    c1, c2 = st.columns([2, 1])
-    busqueda = c1.text_input("Buscar", placeholder="Nombre comun o cientifico…")
-    tipo = c2.selectbox("Tipo", ["Todos"] + datos.TIPOS)
-
-    filtradas = especies
-    if busqueda:
-        q = busqueda.lower()
-        filtradas = filtradas[
-            filtradas["nombre_comun"].str.lower().str.contains(q)
-            | filtradas["nombre_cientifico"].str.lower().str.contains(q)
-        ]
-    if tipo != "Todos":
-        filtradas = filtradas[filtradas["tipo"] == tipo]
-
-    st.caption(f"Mostrando {len(filtradas)} de {len(especies)} especies")
-
-    columnas = st.columns(2, gap="large")
-    for i, (_, f) in enumerate(filtradas.iterrows()):
-        with columnas[i % 2]:
-            with st.container(border=True):
-                # Imagen de referencia por especie
-                img_url = f.get("imagen_url")
-                if pd.notna(img_url) and img_url:
-                    st.image(str(img_url), use_container_width=True, caption=f"{f['nombre_comun']} ({f['nombre_cientifico']})")
-
-                # Titulo y Etiquetas de Riesgo / Sanitaria
-                es_vector = str(f.get("portador_enfermedades", "")).strip().lower() in ["si", "sí", "true", "1"]
-                tag_vect = f" &nbsp;{tag_sanitaria()}" if es_vector else ""
-
-                st.markdown(f"#### {f['nombre_comun']}")
-                st.markdown(f"*{f['nombre_cientifico']}* &nbsp;|&nbsp; {tag_riesgo(f['riesgo'])}{tag_vect}", unsafe_allow_html=True)
-                st.write(f['descripcion'])
-                st.caption(f"🏛️ **Autoridad competente:** {f['autoridad']} &nbsp;|&nbsp; 🏷️ **Tipo:** {f['tipo']}")
+    # Con tres fichas no hace falta buscador ni filtro por tipo: se ven todas de
+    # una vez, y las tres son mamiferos.
+    for _, f in especies.iterrows():
+        _ficha(f, resumen, fotos)
 
     st.divider()
-    st.markdown("##### Set de imagenes de entrenamiento")
-    pendiente("subir nuestras fotos a <code>data/imagenes/&lt;nombre_especie&gt;/</code> "
-              "y registrar cuantas hay por especie.")
+    _seccion_modelo()
+
+
+def _ficha(f: pd.Series, resumen: pd.DataFrame, fotos: pd.DataFrame) -> None:
+    color = ESPECIE_COLOR.get(f["nombre_comun"], "#4A7C59")
+
+    with st.container(border=True):
+        col_img, col_txt = st.columns([1, 2], gap="large")
+
+        with col_img:
+            url = f.get("imagen_url")
+            if pd.notna(url) and url:
+                st.image(str(url), width="stretch")
+                st.caption("Foto real de GBIF, tomada en Chile.")
+            else:
+                st.info("Sin foto disponible con licencia libre.")
+
+        with col_txt:
+            es_vector = str(f.get("portador_enfermedades", "")).strip().lower() in ["si", "sí", "true", "1"]
+            tag_vect = f" &nbsp;{tag_sanitaria()}" if es_vector else ""
+
+            st.markdown(
+                f'<h4 style="margin:0"><span style="color:{color}">●</span> '
+                f'{f["nombre_comun"]}</h4>', unsafe_allow_html=True)
+            st.markdown(f'*{f["nombre_cientifico"]}* &nbsp;|&nbsp; '
+                        f'{tag_riesgo(f["riesgo"])}{tag_vect}', unsafe_allow_html=True)
+            st.write(f["descripcion"])
+            st.caption(f"🏛️ Avisar a **{f['autoridad']}**")
+
+            fila = resumen[resumen["nombre_comun"] == f["nombre_comun"]]
+            if not fila.empty:
+                r = fila.iloc[0]
+                m = st.columns(4)
+                m[0].metric("Registros", f"{int(r['registros']):,}")
+                m[1].metric("En zona urbana", f"{r['pct_urbano']:.1f}%")
+                m[2].metric("Regiones", int(r["regiones"]))
+                m[3].metric("Periodo", f"{int(r['anio_primero'])}–{int(r['anio_ultimo'])}")
+
+            n_fotos = len(fotos[fotos["nombre_comun"] == f["nombre_comun"]]) if "nombre_comun" in fotos.columns else 0
+            if n_fotos:
+                with st.expander(f"Ver {n_fotos} fotos de referencia"):
+                    _galeria(fotos[fotos["nombre_comun"] == f["nombre_comun"]])
+
+
+def _galeria(sub: pd.DataFrame) -> None:
+    cols = st.columns(4)
+    for i, (_, r) in enumerate(sub.iterrows()):
+        with cols[i % 4]:
+            st.image(str(r["foto_url"]), width="stretch")
+            lugar = r.get("comuna") or r.get("region") or ""
+            anio = f" · {int(r['anio'])}" if pd.notna(r.get("anio")) else ""
+            st.caption(f"{lugar}{anio}")
+
+
+def _seccion_modelo() -> None:
+    from core import modelo
+
+    st.markdown("##### El modelo de reconocimiento")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("""
+- Arquitectura: **YOLO11s** (deteccion de objetos)
+- Entrenamiento: 554 imagenes anotadas, en Kaggle (GPU T4)
+- Clases: `jabali`, `liebre`, `rata gris`
+- Devuelve la especie con mayor confianza de la foto
+""")
+    with c2:
+        st.markdown("**Umbral de confirmacion por especie**")
+        for etiqueta, umbral in modelo.UMBRALES_POR_ESPECIE.items():
+            nombre = modelo.MAPA_ETIQUETAS.get(etiqueta, etiqueta)
+            st.markdown(f"- {nombre}: **{umbral:.0%}**")
+        st.caption("Bajo ese umbral la deteccion se informa como coincidencia "
+                   "parcial y no habilita el envio de una alerta.")
+
+    st.caption("El modelo solo puede reconocer estas tres clases: cualquier otra "
+               "especie fotografiada quedara sin identificar.")

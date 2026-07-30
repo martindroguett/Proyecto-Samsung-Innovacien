@@ -37,12 +37,11 @@ def selector_sidebar() -> dict:
         if "ubi_lon" not in st.session_state:
             st.session_state["ubi_lon"] = float(lon_ref)
 
-        idx_reg = list(REGIONES).index(reg_actual) if reg_actual in REGIONES else 0
-
+        # Sin 'index': el valor vive en session_state bajo la key 'ubi_region',
+        # y pasar ambos hace que Streamlit avise que el default se ignora.
         region = st.selectbox(
             "Region",
             list(REGIONES),
-            index=idx_reg,
             key="ubi_region",
             on_change=_al_cambiar_region,
         )
@@ -53,7 +52,7 @@ def selector_sidebar() -> dict:
             lat = st.number_input("Latitud", format="%.4f", key="ubi_lat")
             lon = st.number_input("Longitud", format="%.4f", key="ubi_lon")
 
-        st.caption("Los datos mostrados son de ejemplo mientras cargamos la base real.")
+        st.caption("Registros reales de GBIF para las tres especies del proyecto.")
 
     return {"region": region, "lat": lat, "lon": lon, "radio_km": radio}
 

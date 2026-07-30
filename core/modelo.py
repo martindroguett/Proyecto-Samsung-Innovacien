@@ -10,15 +10,14 @@ from PIL import Image
 
 from core.datos import cargar_especies
 
-RUTA_LOCAL_KAGGLE = Path(r"C:\Users\rapha\Documents\Samsung\resultados_entrenamiento\weights\best.pt")
 MODELO_PATH = Path(__file__).parent / "best.pt"
-if not MODELO_PATH.exists() and RUTA_LOCAL_KAGGLE.exists():
-    MODELO_PATH = RUTA_LOCAL_KAGGLE
 
-MODELO_HF = "YOLO11s (Entrenado en Kaggle - 554 imágenes)"
+MODELO_NOMBRE = "YOLO11s (entrenado en Kaggle, 554 imagenes)"
 USAR_MODELO_REAL = True
 
-# Mapeo de etiquetas del modelo -> nombre_comun en data/especies.csv
+# Mapeo de etiquetas del modelo -> nombre_comun en data/especies.csv.
+# Las tres clases del modelo son las tres unicas especies del proyecto: el
+# catalogo, los avistamientos y el analisis se limitan a ellas.
 MAPA_ETIQUETAS: dict[str, str] = {
     "jabali": "Jabali",
     "liebre": "Liebre europea",
@@ -34,6 +33,17 @@ UMBRALES_POR_ESPECIE: dict[str, float] = {
 
 UMBRAL_DEFAULT = 0.50
 UMBRAL_CONFIANZA = 0.45  # Compatibilidad
+
+# Los umbrales de arriba estan indexados por la ETIQUETA del modelo ('liebre'),
+# pero Prediccion.especie guarda el NOMBRE COMUN ('Liebre europea'), asi que
+# buscar el umbral con el nombre comun no encontraba la clave y caia al valor por
+# defecto. Derivamos el indice por nombre comun del mismo mapa de etiquetas para
+# no tener que mantener dos listas sincronizadas a mano.
+UMBRALES_POR_NOMBRE: dict[str, float] = {
+    MAPA_ETIQUETAS[etiqueta]: umbral
+    for etiqueta, umbral in UMBRALES_POR_ESPECIE.items()
+    if etiqueta in MAPA_ETIQUETAS
+}
 
 
 @dataclass
@@ -51,7 +61,8 @@ class Prediccion:
 
     @property
     def confiable(self) -> bool:
-        return self.confianza >= UMBRALS_POR_ESPECIE.get(self.especie.lower(), UMBRAL_DEFAULT)
+        """Si la confianza alcanza el umbral exigido para esta especie."""
+        return self.confianza >= UMBRALES_POR_NOMBRE.get(self.especie, UMBRAL_DEFAULT)
 
 
 @st.cache_resource(show_spinner="Cargando modelo de IA...")

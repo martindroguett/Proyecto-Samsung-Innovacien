@@ -1,5 +1,26 @@
+# Dependencias de la APLICACION (lo que instala Streamlit Cloud).
+# Las herramientas de notebooks van en requirements-dev.txt a proposito: aqui
+# solo debe estar lo que la app necesita para correr.
+
+# --- PyTorch en su version solo-CPU -----------------------------------------
+# Sin esta linea, pip en Linux instala la build con soporte CUDA (~2,5 GB de
+# wheels) y el despliegue falla por espacio o por tiempo de build. Streamlit
+# Cloud no tiene GPU, asi que la version CPU es la correcta y pesa ~200 MB.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.2
+torchvision>=0.17
+
+# --- Modelo de reconocimiento -----------------------------------------------
+ultralytics>=8.3.0
+
+# Nota: ultralytics depende de opencv-python (no de la variante headless), y esa
+# libreria necesita libGL.so.1, que NO viene en el contenedor de Streamlit Cloud.
+# Sin eso la app arranca y muere con ImportError al importar cv2. No se arregla
+# desde aqui: se resuelve con el archivo packages.txt de la raiz.
+
+# --- Aplicacion -------------------------------------------------------------
 streamlit>=1.40
 pandas>=2.0
 numpy>=1.26
 pillow>=10.0
-ultralytics>=8.3.0
+pydeck>=0.9

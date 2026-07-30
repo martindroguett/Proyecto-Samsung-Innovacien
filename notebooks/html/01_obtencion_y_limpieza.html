@@ -7332,7 +7332,12 @@ a.anchor-link {
     if (!diagrams.length) {
       return;
     }
-    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
+    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
+    if(elkUrl) {
+      const elkLayouts = (await import(elkUrl)).default;
+      mermaid.registerLayoutLoaders(elkLayouts);
+    }
     const parser = new DOMParser();
 
     mermaid.initialize({
@@ -7429,7 +7434,8 @@ a.anchor-link {
      * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
      */
     function cleanMermaidSvg(svg) {
-      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+      return `${SVG_XML_HEADER}${svg}`;
     }
 
 
@@ -7455,6 +7461,285 @@ a.anchor-link {
       }
       return `<${tag} ${rest}>`;
     }
+
+
+  /**
+   * Named HTML entities with their decimal equivalent codes.
+   *
+   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
+   * */
+  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
+<!ENTITY aacute "&#225;">
+<!ENTITY Acirc "&#194;">
+<!ENTITY acirc "&#226;">
+<!ENTITY acute "&#180;">
+<!ENTITY AElig "&#198;">
+<!ENTITY aelig "&#230;">
+<!ENTITY Agrave "&#192;">
+<!ENTITY agrave "&#224;">
+<!ENTITY alefsym "&#8501;">
+<!ENTITY Alpha "&#913;">
+<!ENTITY alpha "&#945;">
+<!ENTITY amp "&#38;">
+<!ENTITY and "&#8869;">
+<!ENTITY ang "&#8736;">
+<!ENTITY Aring "&#197;">
+<!ENTITY aring "&#229;">
+<!ENTITY asymp "&#8776;">
+<!ENTITY Atilde "&#195;">
+<!ENTITY atilde "&#227;">
+<!ENTITY Auml "&#196;">
+<!ENTITY auml "&#228;">
+<!ENTITY bdquo "&#8222;">
+<!ENTITY Beta "&#914;">
+<!ENTITY beta "&#946;">
+<!ENTITY brvbar "&#166;">
+<!ENTITY bull "&#8226;">
+<!ENTITY cap "&#8745;">
+<!ENTITY Ccedil "&#199;">
+<!ENTITY ccedil "&#231;">
+<!ENTITY cedil "&#184;">
+<!ENTITY cent "&#162;">
+<!ENTITY Chi "&#935;">
+<!ENTITY chi "&#967;">
+<!ENTITY circ "&#710;">
+<!ENTITY clubs "&#9827;">
+<!ENTITY cong "&#8773;">
+<!ENTITY copy "&#169;">
+<!ENTITY crarr "&#8629;">
+<!ENTITY cup "&#8746;">
+<!ENTITY curren "&#164;">
+<!ENTITY dagger "&#8224;">
+<!ENTITY Dagger "&#8225;">
+<!ENTITY darr "&#8595;">
+<!ENTITY dArr "&#8659;">
+<!ENTITY deg "&#176;">
+<!ENTITY Delta "&#916;">
+<!ENTITY delta "&#948;">
+<!ENTITY diams "&#9830;">
+<!ENTITY divide "&#247;">
+<!ENTITY Eacute "&#201;">
+<!ENTITY eacute "&#233;">
+<!ENTITY Ecirc "&#202;">
+<!ENTITY ecirc "&#234;">
+<!ENTITY Egrave "&#200;">
+<!ENTITY egrave "&#232;">
+<!ENTITY empty "&#8709;">
+<!ENTITY emsp "&#8195;">
+<!ENTITY ensp "&#8194;">
+<!ENTITY epsilon "&#949;">
+<!ENTITY Epsilon "&#917;">
+<!ENTITY equiv "&#8801;">
+<!ENTITY Eta "&#919;">
+<!ENTITY eta "&#951;">
+<!ENTITY ETH "&#208;">
+<!ENTITY eth "&#240;">
+<!ENTITY Euml "&#203;">
+<!ENTITY euml "&#235;">
+<!ENTITY exist "&#8707;">
+<!ENTITY fnof "&#402;">
+<!ENTITY forall "&#8704;">
+<!ENTITY frac12 "&#189;">
+<!ENTITY frac14 "&#188;">
+<!ENTITY frac34 "&#190;">
+<!ENTITY frasl "&#8260;">
+<!ENTITY Gamma "&#915;">
+<!ENTITY gamma "&#947;">
+<!ENTITY ge "&#8805;">
+<!ENTITY gt "&#62;">
+<!ENTITY harr "&#8596;">
+<!ENTITY hArr "&#8660;">
+<!ENTITY hearts "&#9829;">
+<!ENTITY hellip "&#8230;">
+<!ENTITY Iacute "&#205;">
+<!ENTITY iacute "&#237;">
+<!ENTITY Icirc "&#206;">
+<!ENTITY icirc "&#238;">
+<!ENTITY iexcl "&#161;">
+<!ENTITY Igrave "&#204;">
+<!ENTITY igrave "&#236;">
+<!ENTITY image "&#8465;">
+<!ENTITY infin "&#8734;">
+<!ENTITY int "&#8747;">
+<!ENTITY Iota "&#921;">
+<!ENTITY iota "&#953;">
+<!ENTITY iquest "&#191;">
+<!ENTITY isin "&#8712;">
+<!ENTITY Iuml "&#207;">
+<!ENTITY iuml "&#239;">
+<!ENTITY Kappa "&#922;">
+<!ENTITY kappa "&#954;">
+<!ENTITY Lambda "&#923;">
+<!ENTITY lambda "&#955;">
+<!ENTITY lang "&#9001;">
+<!ENTITY laquo "&#171;">
+<!ENTITY larr "&#8592;">
+<!ENTITY lArr "&#8656;">
+<!ENTITY lceil "&#8968;">
+<!ENTITY ldquo "&#8220;">
+<!ENTITY le "&#8804;">
+<!ENTITY lfloor "&#8970;">
+<!ENTITY lowast "&#8727;">
+<!ENTITY loz "&#9674;">
+<!ENTITY lrm "&#8206;">
+<!ENTITY lsaquo "&#8249;">
+<!ENTITY lsquo "&#8216;">
+<!ENTITY lt "&#60;">
+<!ENTITY macr "&#175;">
+<!ENTITY mdash "&#8212;">
+<!ENTITY micro "&#181;">
+<!ENTITY middot "&#183;">
+<!ENTITY minus "&#8722;">
+<!ENTITY Mu "&#924;">
+<!ENTITY mu "&#956;">
+<!ENTITY nabla "&#8711;">
+<!ENTITY nbsp "&#160;">
+<!ENTITY ndash "&#8211;">
+<!ENTITY ne "&#8800;">
+<!ENTITY ni "&#8715;">
+<!ENTITY not "&#172;">
+<!ENTITY notin "&#8713;">
+<!ENTITY nsub "&#8836;">
+<!ENTITY Ntilde "&#209;">
+<!ENTITY ntilde "&#241;">
+<!ENTITY Nu "&#925;">
+<!ENTITY nu "&#957;">
+<!ENTITY Oacute "&#211;">
+<!ENTITY oacute "&#243;">
+<!ENTITY Ocirc "&#212;">
+<!ENTITY ocirc "&#244;">
+<!ENTITY OElig "&#338;">
+<!ENTITY oelig "&#339;">
+<!ENTITY Ograve "&#210;">
+<!ENTITY ograve "&#242;">
+<!ENTITY oline "&#8254;">
+<!ENTITY Omega "&#937;">
+<!ENTITY omega "&#969;">
+<!ENTITY Omicron "&#927;">
+<!ENTITY omicron "&#959;">
+<!ENTITY oplus "&#8853;">
+<!ENTITY or "&#8870;">
+<!ENTITY ordf "&#170;">
+<!ENTITY ordm "&#186;">
+<!ENTITY Oslash "&#216;">
+<!ENTITY oslash "&#248;">
+<!ENTITY Otilde "&#213;">
+<!ENTITY otilde "&#245;">
+<!ENTITY otimes "&#8855;">
+<!ENTITY Ouml "&#214;">
+<!ENTITY ouml "&#246;">
+<!ENTITY para "&#182;">
+<!ENTITY part "&#8706;">
+<!ENTITY permil "&#8240;">
+<!ENTITY perp "&#8869;">
+<!ENTITY Phi "&#934;">
+<!ENTITY phi "&#966;">
+<!ENTITY Pi "&#928;">
+<!ENTITY pi "&#960;">
+<!ENTITY piv "&#982;">
+<!ENTITY plusmn "&#177;">
+<!ENTITY pound "&#163;">
+<!ENTITY prime "&#8242;">
+<!ENTITY Prime "&#8243;">
+<!ENTITY prod "&#8719;">
+<!ENTITY prop "&#8733;">
+<!ENTITY Psi "&#936;">
+<!ENTITY psi "&#968;">
+<!ENTITY quot "&#34;">
+<!ENTITY radic "&#8730;">
+<!ENTITY rang "&#9002;">
+<!ENTITY raquo "&#187;">
+<!ENTITY rarr "&#8594;">
+<!ENTITY rArr "&#8658;">
+<!ENTITY rceil "&#8969;">
+<!ENTITY rdquo "&#8221;">
+<!ENTITY real "&#8476;">
+<!ENTITY reg "&#174;">
+<!ENTITY rfloor "&#8971;">
+<!ENTITY Rho "&#929;">
+<!ENTITY rho "&#961;">
+<!ENTITY rlm "&#8207;">
+<!ENTITY rsaquo "&#8250;">
+<!ENTITY rsquo "&#8217;">
+<!ENTITY sbquo "&#8218;">
+<!ENTITY Scaron "&#352;">
+<!ENTITY scaron "&#353;">
+<!ENTITY sdot "&#8901;">
+<!ENTITY sect "&#167;">
+<!ENTITY shy "&#173;">
+<!ENTITY Sigma "&#931;">
+<!ENTITY sigma "&#963;">
+<!ENTITY sigmaf "&#962;">
+<!ENTITY sim "&#8764;">
+<!ENTITY spades "&#9824;">
+<!ENTITY sub "&#8834;">
+<!ENTITY sube "&#8838;">
+<!ENTITY sum "&#8721;">
+<!ENTITY sup "&#8835;">
+<!ENTITY sup1 "&#185;">
+<!ENTITY sup2 "&#178;">
+<!ENTITY sup3 "&#179;">
+<!ENTITY supe "&#8839;">
+<!ENTITY szlig "&#223;">
+<!ENTITY Tau "&#932;">
+<!ENTITY tau "&#964;">
+<!ENTITY there4 "&#8756;">
+<!ENTITY Theta "&#920;">
+<!ENTITY theta "&#952;">
+<!ENTITY thetasym "&#977;">
+<!ENTITY thinsp "&#8201;">
+<!ENTITY THORN "&#222;">
+<!ENTITY thorn "&#254;">
+<!ENTITY tilde "&#732;">
+<!ENTITY times "&#215;">
+<!ENTITY trade "&#8482;">
+<!ENTITY Uacute "&#218;">
+<!ENTITY uacute "&#250;">
+<!ENTITY uarr "&#8593;">
+<!ENTITY uArr "&#8657;">
+<!ENTITY Ucirc "&#219;">
+<!ENTITY ucirc "&#251;">
+<!ENTITY Ugrave "&#217;">
+<!ENTITY ugrave "&#249;">
+<!ENTITY uml "&#168;">
+<!ENTITY upsih "&#978;">
+<!ENTITY Upsilon "&#933;">
+<!ENTITY upsilon "&#965;">
+<!ENTITY Uuml "&#220;">
+<!ENTITY uuml "&#252;">
+<!ENTITY weierp "&#8472;">
+<!ENTITY Xi "&#926;">
+<!ENTITY xi "&#958;">
+<!ENTITY Yacute "&#221;">
+<!ENTITY yacute "&#253;">
+<!ENTITY yen "&#165;">
+<!ENTITY Yuml "&#376;">
+<!ENTITY yuml "&#255;">
+<!ENTITY Zeta "&#918;">
+<!ENTITY zeta "&#950;">
+<!ENTITY zwj "&#8205;">
+<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
+
+  /**
+   * A reasonably strict xml declaration.
+   */
+  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
+
+  /**
+   * The beginning of the XML doctype declaration.
+   */
+  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
+
+  /**
+   * The end of the XML docype declaration.
+   */
+  const DOCTYPE_END = ']>';
+
+  /**
+   * A full header for an SVG XML document.
+   */
+  const SVG_XML_HEADER = `${XML_DECL}
+    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
 
     void Promise.all([...diagrams].map(renderOneMarmaid));
   });
@@ -7511,7 +7796,7 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e629a657">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=40742ab0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7519,60 +7804,71 @@ a.anchor-link {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Proyecto-Innovacien-%E2%80%94-1.-Obtenci%C3%B3n-y-limpieza-de-datos">Proyecto Innovacien — 1. Obtención y limpieza de datos<a class="anchor-link" href="#Proyecto-Innovacien-%E2%80%94-1.-Obtenci%C3%B3n-y-limpieza-de-datos">¶</a></h1><p><strong>Curso:</strong> Código y Programación · Samsung Innovation Campus Chile 2026 — Cohort 2</p>
 <h2 id="Pregunta-de-an%C3%A1lisis">Pregunta de análisis<a class="anchor-link" href="#Pregunta-de-an%C3%A1lisis">¶</a></h2><blockquote>
-<p><strong>¿Qué zonas urbanas de Chile se ven más afectadas por especies invasoras dañinas, y por cuáles?</strong></p>
+<p><strong>¿Cómo se distribuye en Chile cada una de las tres especies invasoras que
+nuestro modelo identifica, y en qué se diferencian sus patrones territoriales?</strong></p>
 </blockquote>
-<p>Para responderla necesitamos cruzar dos cosas que ningún dataset tiene juntas:</p>
+<p>El proyecto tiene un modelo de visión (<code>core/best.pt</code>, YOLO11s) entrenado para
+reconocer <strong>tres especies</strong>, y solo tres:</p>
 <table>
 <thead>
 <tr>
-<th>Necesitamos</th>
-<th>Fuente</th>
-<th>Qué aporta</th>
+<th>Etiqueta del modelo</th>
+<th>Nombre común</th>
+<th>Nombre científico</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Qué</strong> especies son invasoras en Chile</td>
-<td>GRIIS Chile</td>
-<td>Registro oficial de 844 especies exóticas, 246 declaradas invasoras</td>
+<td><code>jabali</code></td>
+<td>Jabalí</td>
+<td><em>Sus scrofa</em></td>
 </tr>
 <tr>
-<td><strong>Dónde</strong> fue vista cada una</td>
-<td>GBIF / iNaturalist</td>
-<td>571.091 registros <strong>fotográficos</strong> georreferenciados en Chile</td>
+<td><code>liebre</code></td>
+<td>Liebre europea</td>
+<td><em>Lepus europaeus</em></td>
+</tr>
+<tr>
+<td><code>rata gris</code></td>
+<td>Rata gris</td>
+<td><em>Rattus norvegicus</em></td>
 </tr>
 </tbody>
 </table>
-<p>La segunda fuente es un <strong>dataset de imágenes</strong>: cada registro es una fotografía tomada
-por una persona, con coordenadas, fecha, licencia y la especie identificada y validada
-por la comunidad. Eso es lo que nos permite responder el <em>dónde</em> y, al mismo tiempo,
-alimentar el catálogo visual de la aplicación.</p>
-<h2 id="Fuentes-y-licencias">Fuentes y licencias<a class="anchor-link" href="#Fuentes-y-licencias">¶</a></h2><p><strong>1. GRIIS Chile</strong> — <em>Global Register of Introduced and Invasive Species: Chile</em>, versión 2.7
-Pauchard A, Sánchez P, Aldridge D, Díaz G M, Soto Volkart N, Skewes O, Wong L J, Pagad S (2020).
-Invasive Species Specialist Group ISSG.
-DOI: <a href="https://doi.org/10.15468/n4ofia">10.15468/n4ofia</a> — <strong>Licencia CC-BY 4.0</strong></p>
-<p><strong>2. GBIF</strong> — registros de ocurrencia con fotografía en Chile. La gran mayoría proviene de
-<em>iNaturalist Research-grade Observations</em> (494.783 de 571.091 registros).
-DOI: <a href="https://doi.org/10.15468/ab3s5x">10.15468/ab3s5x</a> — <strong>Licencias CC-BY-NC 4.0 (434.577),
-CC-BY 4.0 (97.113) y CC0 1.0 (39.400)</strong></p>
-<p>Ambas fuentes son abiertas, tienen DOI citable y se acceden por API pública sin credenciales.</p>
+<p>Todo el análisis se limita a estas tres. Esa restricción no es una limitación
+que arrastremos: es la que hace que el análisis y el producto hablen de lo
+mismo. No tiene sentido analizar 800 especies si la app solo puede identificar
+tres.</p>
+<h3 id="Por-qu%C3%A9-este-notebook-ya-no-usa-GRIIS">Por qué este notebook ya no usa GRIIS<a class="anchor-link" href="#Por-qu%C3%A9-este-notebook-ya-no-usa-GRIIS">¶</a></h3><p>La versión anterior partía del <strong>GRIIS Chile</strong> (Global Register of Introduced
+and Invasive Species) para <em>descubrir</em> cuáles de las 844 especies exóticas del
+país están declaradas invasoras, y luego cruzarlas con GBIF.</p>
+<p>Ese paso desapareció, y vale explicar por qué: <strong>las tres especies ya están
+fijadas por el modelo</strong>. No hay nada que descubrir. Mantener GRIIS significaría
+descargar un registro de 844 taxones, resolver 844 nombres científicos contra
+la taxonomía de GBIF y descartar 841 filas — trabajo cuyo resultado ya
+conocemos de antemano.</p>
+<p>Trabajamos directo con el <strong><code>speciesKey</code></strong> de GBIF de cada especie, que además
+resuelve gratis el problema que GRIIS nos causaba: los sinónimos taxonómicos.</p>
+<h3 id="Fuente-%C3%BAnica">Fuente única<a class="anchor-link" href="#Fuente-%C3%BAnica">¶</a></h3><p><strong>GBIF</strong> — Global Biodiversity Information Facility (<code>api.gbif.org</code>). Los
+registros chilenos vienen de monitoreo institucional, ciencia ciudadana
+(iNaturalist) y colecciones de museo. Licencias CC0 / CC-BY / CC-BY-NC.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=48a732f0">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5f111a8f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Preparaci%C3%B3n-del-entorno">Preparación del entorno<a class="anchor-link" href="#Preparaci%C3%B3n-del-entorno">¶</a></h2><p>El notebook está en <code>notebooks/</code>, pero el código y los datos viven en la raíz del proyecto.
-Ajustamos el directorio de trabajo para que las rutas relativas funcionen igual desde
+<h2 id="Preparaci%C3%B3n-del-entorno">Preparación del entorno<a class="anchor-link" href="#Preparaci%C3%B3n-del-entorno">¶</a></h2><p>El notebook vive en <code>notebooks/</code>, pero el código y los datos están en la raíz.
+Ajustamos el directorio de trabajo para que las rutas funcionen igual desde
 cualquiera de los dos lugares.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dff7f83f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1d2fc004">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7585,18 +7881,18 @@ cualquiera de los dos lugares.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="c1"># Nos movemos a la raíz del proyecto, venga de donde venga la ejecución</span>
 <span class="n">RAIZ</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="k">if</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"notebooks"</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">RAIZ</span><span class="p">)</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">RAIZ</span><span class="p">))</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">"display.max_columns"</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
-<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">"display.width"</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">"display.width"</span><span class="p">,</span> <span class="mi">170</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Raíz del proyecto:"</span><span class="p">,</span> <span class="n">RAIZ</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Fecha de acceso a los datos:"</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Fecha de ejecución:"</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -7610,33 +7906,26 @@ cualquiera de los dos lugares.</p>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Raíz del proyecto: /Users/martindroguett/Desktop/Innovacien/Proyecto-Samsung-Innovacien
-Fecha de acceso a los datos: 2026-07-27
+Fecha de ejecución: 2026-07-29
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b774047e">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bc2ab5ec">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<hr/>
-<h1 id="Paso-1-%E2%80%94-Descargar-el-registro-oficial-de-especies-(GRIIS-Chile)">Paso 1 — Descargar el registro oficial de especies (GRIIS Chile)<a class="anchor-link" href="#Paso-1-%E2%80%94-Descargar-el-registro-oficial-de-especies-(GRIIS-Chile)">¶</a></h1><p>GRIIS se publica como <strong>archivo Darwin Core</strong> (un ZIP con varios <code>.txt</code> separados por
-tabulador). La función <code>descargar_griis()</code> de <a href="../core/ingesta.py"><code>core/ingesta.py</code></a> lo
-baja, lo descomprime y une sus tres tablas:</p>
-<ul>
-<li><code>taxon.txt</code> — nombre científico y clasificación taxonómica</li>
-<li><code>speciesprofile.txt</code> — si la especie está declarada <strong>invasora</strong> y en qué hábitat vive</li>
-<li><code>distribution.txt</code> — país y forma de establecimiento</li>
-</ul>
-<p>Lo dejamos en caché en <code>data/crudo/</code> para no volver a descargarlo en cada ejecución.</p>
+<p>Las tres especies objetivo están declaradas en un solo lugar,
+<code>core/ingesta.py</code>, y de ahí las consumen tanto este notebook como la
+aplicación. Así no hay dos listas que puedan desincronizarse.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3bcf60c1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=810095ac">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7644,14 +7933,12 @@ baja, lo descomprime y une sus tres tablas:</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">descargar_griis</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">ESPECIES_OBJETIVO</span>
 
-<span class="n">griis</span> <span class="o">=</span> <span class="n">descargar_griis</span><span class="p">()</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Taxones exóticos registrados en Chile: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">griis</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Declarados invasores:                  </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">griis</span><span class="o">.</span><span class="n">invasora</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Columnas disponibles:</span><span class="se">\n</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">griis</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">griis</span><span class="p">[[</span><span class="s2">"scientificName"</span><span class="p">,</span> <span class="s2">"kingdom"</span><span class="p">,</span> <span class="s2">"class"</span><span class="p">,</span> <span class="s2">"family"</span><span class="p">,</span> <span class="s2">"isInvasive"</span><span class="p">,</span> <span class="s2">"habitat"</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">objetivo</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">ESPECIES_OBJETIVO</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">[</span>
+    <span class="p">[</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"speciesKey"</span><span class="p">,</span> <span class="s2">"nombre_comun"</span><span class="p">,</span> <span class="s2">"nombre_cientifico"</span><span class="p">,</span> <span class="s2">"riesgo"</span><span class="p">,</span> <span class="s2">"autoridad"</span><span class="p">]</span>
+<span class="p">]</span>
+<span class="n">objetivo</span>
 </pre></div>
 </div>
 </div>
@@ -7661,17 +7948,6 @@ baja, lo descomprime y une sus tres tablas:</p>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Taxones exóticos registrados en Chile: 844
-Declarados invasores:                  246
-
-Columnas disponibles:
-['id', 'taxonID', 'scientificName', 'acceptedNameUsage', 'kingdom', 'phylum', 'class', 'order', 'family', 'taxonRank', 'taxonomicStatus', 'isInvasive', 'habitat', 'countryCode', 'occurrenceStatus', 'establishmentMeans', 'binomio', 'invasora']
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
 <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
@@ -7693,59 +7969,41 @@ Columnas disponibles:
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>scientificName</th>
-<th>kingdom</th>
-<th>class</th>
-<th>family</th>
-<th>isInvasive</th>
-<th>habitat</th>
+<th>id</th>
+<th>speciesKey</th>
+<th>nombre_comun</th>
+<th>nombre_cientifico</th>
+<th>riesgo</th>
+<th>autoridad</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<th>0</th>
-<td>Abutilon grandifolium (Willd.) Sweet</td>
-<td>Plantae</td>
-<td>Magnoliopsida</td>
-<td>Malvaceae</td>
-<td>NaN</td>
-<td>terrestrial</td>
+<th>jabali</th>
+<td>1</td>
+<td>7705930</td>
+<td>Jabali</td>
+<td>Sus scrofa</td>
+<td>Alto</td>
+<td>SAG</td>
 </tr>
 <tr>
-<th>1</th>
-<td>Acacia aroma Gillies ex Hook. &amp; Arn.</td>
-<td>Plantae</td>
-<td>Magnoliopsida</td>
-<td>Fabaceae</td>
-<td>invasive</td>
-<td>terrestrial</td>
+<th>liebre</th>
+<td>2</td>
+<td>7952072</td>
+<td>Liebre europea</td>
+<td>Lepus europaeus</td>
+<td>Medio</td>
+<td>SAG</td>
 </tr>
 <tr>
-<th>2</th>
-<td>Acacia dealbata Link</td>
-<td>Plantae</td>
-<td>Magnoliopsida</td>
-<td>Fabaceae</td>
-<td>invasive</td>
-<td>terrestrial</td>
-</tr>
-<tr>
-<th>3</th>
-<td>Acacia horrida (L.) Willd.</td>
-<td>Plantae</td>
-<td>Magnoliopsida</td>
-<td>Fabaceae</td>
-<td>NaN</td>
-<td>terrestrial</td>
-</tr>
-<tr>
-<th>4</th>
-<td>Acacia karroo Hayne</td>
-<td>Plantae</td>
-<td>Magnoliopsida</td>
-<td>Fabaceae</td>
-<td>NaN</td>
-<td>terrestrial</td>
+<th>rata gris</th>
+<td>3</td>
+<td>2439261</td>
+<td>Rata gris</td>
+<td>Rattus norvegicus</td>
+<td>Alto</td>
+<td>SAG</td>
 </tr>
 </tbody>
 </table>
@@ -7755,23 +8013,31 @@ Columnas disponibles:
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=74894902">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=783f00a8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Lo-primero-que-hay-que-entender-de-GRIIS">Lo primero que hay que entender de GRIIS<a class="anchor-link" href="#Lo-primero-que-hay-que-entender-de-GRIIS">¶</a></h3><p>Tiene dos limitaciones que definen todo el diseño del análisis:</p>
-<ol>
-<li><strong>No tiene geografía interna.</strong> <code>countryCode</code> vale <code>CL</code> en las 844 filas. No hay región,
-comuna ni coordenada.</li>
-<li><strong>No tiene ninguna fecha.</strong> No sabemos cuándo llegó ni cuándo se detectó cada especie.</li>
-</ol>
-<p>Es decir: GRIIS responde <strong>qué</strong>, y nada más. Todo el <em>dónde</em> tiene que venir de GBIF.</p>
+<hr/>
+<h1 id="Paso-1-%E2%80%94-Descargar-los-registros-de-GBIF">Paso 1 — Descargar los registros de GBIF<a class="anchor-link" href="#Paso-1-%E2%80%94-Descargar-los-registros-de-GBIF">¶</a></h1><p>Pedimos a GBIF <strong>todas</strong> las ocurrencias chilenas con coordenada de las tres
+especies. Dos decisiones de diseño:</p>
+<p><strong>Filtramos en origen, no después.</strong> La consulta lleva <code>country=CL</code> y
+<code>hasCoordinate=true</code>. Es más barato que descargar todo y filtrar en pandas, y
+—como se verá en el paso 2— explica por qué la limpieza posterior descarta tan
+poco.</p>
+<p><strong>Bajamos registros individuales, no conteos agregados.</strong> La versión anterior
+del proyecto usaba <em>facetas</em> de GBIF (solo totales por especie y zona) porque
+con 812 especies × 30 zonas los registros individuales eran inmanejables. Con
+tres especies son ~49.000 filas, que caben de sobra en memoria. Y esto es lo
+que habilita el análisis territorial: para preguntar por latitud, entorno
+urbano/rural o evolución temporal hacen falta los puntos, no los totales.</p>
+<p>La descarga queda en caché en <code>data/crudo/</code>, porque son ~165 peticiones para la
+liebre y el notebook se re-ejecuta muchas veces.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=463c655a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=45997eaa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7779,12 +8045,11 @@ comuna ni coordenada.</li>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Valores únicos de countryCode:"</span><span class="p">,</span> <span class="n">griis</span><span class="o">.</span><span class="n">countryCode</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"¿Hay alguna columna con fechas?"</span><span class="p">,</span>
-      <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">griis</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="s2">"date"</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"year"</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="ow">or</span> <span class="s2">"ninguna"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Cómo se distribuyen las 844 especies exóticas por reino:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">griis</span><span class="o">.</span><span class="n">kingdom</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">descargar_todas</span>
+
+<span class="n">crudo</span> <span class="o">=</span> <span class="n">descargar_todas</span><span class="p">()</span>          <span class="c1"># usa la caché de data/crudo/ si ya existe</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">crudo</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> registros crudos</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">crudo</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"clase_modelo"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">"registros"</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7797,47 +8062,72 @@ comuna ni coordenada.</li>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Valores únicos de countryCode: ['CL']
-¿Hay alguna columna con fechas? ninguna
+<pre>49,165 registros crudos
 
-Cómo se distribuyen las 844 especies exóticas por reino:
-kingdom
-Plantae      725
-Animalia     114
-Chromista      4
-Bacteria       1
 </pre>
 </div>
 </div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>registros</th>
+</tr>
+<tr>
+<th>clase_modelo</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>jabali</th>
+<td>3156</td>
+</tr>
+<tr>
+<th>liebre</th>
+<td>45778</td>
+</tr>
+<tr>
+<th>rata gris</th>
+<td>231</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7d65cb24">
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=667f74f8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<hr/>
-<h1 id="Paso-2-%E2%80%94-Limpieza-(parte-1):-los-nombres-cient%C3%ADficos">Paso 2 — Limpieza (parte 1): los nombres científicos<a class="anchor-link" href="#Paso-2-%E2%80%94-Limpieza-(parte-1):-los-nombres-cient%C3%ADficos">¶</a></h1><p>Aquí aparece el primer problema real. GRIIS guarda el nombre <strong>con la autoría botánica o
-zoológica</strong> incluida:</p>
-<pre><code>"Acacia dealbata Link"
-"Vespula germanica (Fabricius, 1793)"
-</code></pre>
-<p>GBIF, en cambio, necesita el <strong>binomio</strong> (género + especie) para poder buscar. Si le
-pasáramos el nombre completo, no encontraría nada.</p>
-<p>Y hay un segundo problema, más traicionero: <strong>GRIIS usa nombres que ya cambiaron</strong>.
-El visón americano figura como <code>Neovison vison</code>, pero hoy se acepta <code>Neogale vison</code>;
-el caracol de jardín figura como <code>Helix aspersa</code>, y hoy es <code>Cornu aspersum</code>. Buscar por
-texto perdería todos esos registros en silencio.</p>
-<p><strong>La solución:</strong> en vez de buscar por nombre, usamos la API de emparejamiento taxonómico
-de GBIF (<code>/species/match</code>) para obtener el <strong><code>speciesKey</code></strong>, un identificador numérico
-estable. GBIF resuelve el sinónimo internamente y el <code>speciesKey</code> recupera todos los
-registros, con el nombre viejo o el nuevo.</p>
+<h3 id="Primera-lectura:-el-desbalance">Primera lectura: el desbalance<a class="anchor-link" href="#Primera-lectura:-el-desbalance">¶</a></h3><p>Antes de limpiar nada, un hecho que va a condicionar todo el análisis: las tres
+especies <strong>no</strong> están representadas ni de cerca por igual.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dcb101c6">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=aee4cf6b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7845,10 +8135,10 @@ registros, con el nombre viejo o el nuevo.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Cómo se ve el problema</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Nombre en GRIIS  -&gt;  binomio extraído"</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">griis</span><span class="o">.</span><span class="n">scientificName</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">n</span><span class="p">[:</span><span class="mi">52</span><span class="p">]</span><span class="si">:</span><span class="s2">54</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">2</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">conteo</span> <span class="o">=</span> <span class="n">crudo</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"clase_modelo"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">clase</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">conteo</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">clase</span><span class="si">:</span><span class="s2">12s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">7,</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="n">n</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">crudo</span><span class="p">)</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2">%   </span><span class="si">{</span><span class="s1">'█'</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">int</span><span class="p">(</span><span class="mi">60</span><span class="o">*</span><span class="n">n</span><span class="o">/</span><span class="n">conteo</span><span class="o">.</span><span class="n">max</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">La liebre tiene </span><span class="si">{</span><span class="n">conteo</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">conteo</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> veces más registros que la rata gris."</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7861,31 +8151,49 @@ registros, con el nombre viejo o el nuevo.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Nombre en GRIIS  -&gt;  binomio extraído
-  Abutilon grandifolium (Willd.) Sweet                   -&gt; Abutilon grandifolium
-  Acacia aroma Gillies ex Hook. &amp; Arn.                   -&gt; Acacia aroma
-  Acacia dealbata Link                                   -&gt; Acacia dealbata
-  Acacia horrida (L.) Willd.                             -&gt; Acacia horrida
-  Acacia karroo Hayne                                    -&gt; Acacia karroo
-  Acacia macracantha Humb. &amp; Bonpl. ex Willd.            -&gt; Acacia macracantha
+<pre>liebre        45,778   93.1%   ████████████████████████████████████████████████████████████
+jabali         3,156    6.4%   ████
+rata gris        231    0.5%   
+
+La liebre tiene 198 veces más registros que la rata gris.
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4fd52049">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e3df3827">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Emparejamiento-con-la-taxonom%C3%ADa-de-GBIF">Emparejamiento con la taxonomía de GBIF<a class="anchor-link" href="#Emparejamiento-con-la-taxonom%C3%ADa-de-GBIF">¶</a></h3><p>Son 844 consultas a la API, lanzadas en paralelo con 8 hilos. Toma alrededor de un minuto,
-así que reutilizamos el resultado si ya está en caché.</p>
+<p>Una razón de 198 a 1 entre la especie más y menos registrada no es un detalle
+menor. Cualquier conclusión del tipo "la liebre es la más extendida" tiene que
+justificar primero que no está midiendo simplemente <strong>quién fue observado más</strong>.
+Volvemos sobre esto en el paso 4, que resulta ser el hallazgo central.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=23f10ed0">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d6ae3b30">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<hr/>
+<h1 id="Paso-2-%E2%80%94-Limpieza">Paso 2 — Limpieza<a class="anchor-link" href="#Paso-2-%E2%80%94-Limpieza">¶</a></h1><p>La función <code>limpiar()</code> aplica los filtros y devuelve además una <strong>bitácora</strong>:
+cuántas filas cayó cada paso y por qué. La idea es que la limpieza sea
+auditable en vez de una caja negra.</p>
+<p>Los pasos son: duplicados por <code>gbif_id</code>, coordenadas ausentes o no numéricas,
+puntos fuera del rectángulo de Chile, la coordenada (0,0) —error clásico de
+digitación—, y registros de <em>ausencia</em> (GBIF permite documentar que una especie
+<strong>no</strong> estaba en un lugar, y eso no es un avistamiento).</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=648630b9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7893,25 +8201,10 @@ así que reutilizamos el resultado si ya está en caché.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">DIR_PROC</span><span class="p">,</span> <span class="n">emparejar_con_gbif</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">limpiar</span>
 
-<span class="n">DIR_PROC</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">ruta_catalogo</span> <span class="o">=</span> <span class="n">DIR_PROC</span> <span class="o">/</span> <span class="s2">"catalogo_especies.csv"</span>
-
-<span class="k">if</span> <span class="n">ruta_catalogo</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-    <span class="n">catalogo</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">ruta_catalogo</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Reutilizando caché: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">catalogo</span><span class="p">)</span><span class="si">}</span><span class="s2"> especies ya emparejadas"</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">match</span> <span class="o">=</span> <span class="n">emparejar_con_gbif</span><span class="p">(</span><span class="n">griis</span><span class="p">)</span>
-    <span class="n">catalogo</span> <span class="o">=</span> <span class="n">griis</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"binomio"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">catalogo</span> <span class="o">=</span> <span class="n">catalogo</span><span class="p">[</span><span class="n">catalogo</span><span class="o">.</span><span class="n">speciesKey</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">catalogo</span><span class="p">[</span><span class="s2">"speciesKey"</span><span class="p">]</span> <span class="o">=</span> <span class="n">catalogo</span><span class="o">.</span><span class="n">speciesKey</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">catalogo</span> <span class="o">=</span> <span class="n">catalogo</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s2">"speciesKey"</span><span class="p">)</span>
-    <span class="n">catalogo</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ruta_catalogo</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Emparejadas y guardadas: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">catalogo</span><span class="p">)</span><span class="si">}</span><span class="s2"> especies"</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Calidad del emparejamiento:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">catalogo</span><span class="o">.</span><span class="n">matchType</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<span class="n">df</span><span class="p">,</span> <span class="n">bitacora</span> <span class="o">=</span> <span class="n">limpiar</span><span class="p">(</span><span class="n">crudo</span><span class="p">)</span>
+<span class="n">bitacora</span>
 </pre></div>
 </div>
 </div>
@@ -7921,37 +8214,104 @@ así que reutilizamos el resultado si ya está en caché.</p>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Reutilizando caché: 812 especies ya emparejadas
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[5]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-Calidad del emparejamiento:
-matchType
-EXACT    811
-FUZZY      1
-</pre>
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>paso</th>
+<th>descartados</th>
+<th>quedan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>duplicados por gbif_id</td>
+<td>0</td>
+<td>49165</td>
+</tr>
+<tr>
+<th>1</th>
+<td>sin coordenada valida</td>
+<td>0</td>
+<td>49165</td>
+</tr>
+<tr>
+<th>2</th>
+<td>fuera del bounding box de Chile</td>
+<td>0</td>
+<td>49165</td>
+</tr>
+<tr>
+<th>3</th>
+<td>coordenada en (0,0)</td>
+<td>0</td>
+<td>49165</td>
+</tr>
+<tr>
+<th>4</th>
+<td>registros de ausencia</td>
+<td>0</td>
+<td>49165</td>
+</tr>
+<tr>
+<th>5</th>
+<td>sin fecha exacta (se marcan, no se descartan)</td>
+<td>32</td>
+<td>49165</td>
+</tr>
+<tr>
+<th>6</th>
+<td>TOTAL</td>
+<td>0</td>
+<td>49165</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ec4e908a">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0eb08034">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Cu%C3%A1nto-perdimos-y-por-qu%C3%A9">Cuánto perdimos y por qué<a class="anchor-link" href="#Cu%C3%A1nto-perdimos-y-por-qu%C3%A9">¶</a></h3><p>De 844 taxones, <strong>812 quedaron emparejados</strong> (96,2%). Las 32 que no, son casi todas
-sinónimos antiguos que GBIF ya no indexa bajo ese nombre — y varias de ellas están
-<em>duplicadas</em> en la lista bajo su nombre actual, así que no perdemos la especie.</p>
-<p>Ejemplo claro: <code>Helix aspersa</code> no empareja, pero <code>Cornu aspersum</code> — que es el mismo
-caracol con su nombre válido — sí, y aparece más adelante entre las especies urbanas
-más fotografiadas. La pérdida real es menor al 4% declarado.</p>
+<h3 id="La-limpieza-no-descart%C3%B3-nada,-y-eso-es-un-resultado">La limpieza no descartó nada, y eso es un resultado<a class="anchor-link" href="#La-limpieza-no-descart%C3%B3-nada,-y-eso-es-un-resultado">¶</a></h3><p>Todos los pasos marcan 0 descartes. No es que los filtros estén mal escritos:
+es la consecuencia de haber <strong>filtrado en origen</strong>. <code>hasCoordinate=true</code> ya
+garantiza coordenada válida, <code>country=CL</code> ya garantiza que el punto cae en
+Chile, y GBIF deduplica por <code>gbif_id</code> antes de servir los datos.</p>
+<p>Dejamos los filtros en el pipeline igualmente, por dos razones: documentan qué
+supuestos estamos asumiendo sobre los datos, y si mañana alguien cambia la
+consulta de la API o suma otra fuente, la bitácora avisará en vez de dejar
+pasar basura en silencio.</p>
+<p>Lo único que sí aparece son <strong>32 registros sin fecha exacta</strong> (traen solo el año
+o el año-mes). No los botamos: su año sirve para la serie temporal, así que los
+marcamos con <code>tiene_fecha</code> y quedan disponibles para todo lo demás.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fd9d01e9">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=80840381">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7959,16 +8319,9 @@ más fotografiadas. La pérdida real es menor al 4% declarado.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">no_emparejadas</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">griis</span><span class="o">.</span><span class="n">binomio</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">catalogo</span><span class="o">.</span><span class="n">binomio</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No emparejadas: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">no_emparejadas</span><span class="p">)</span><span class="si">}</span><span class="s2"> de </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">griis</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">no_emparejadas</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">griis</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%)"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">no_emparejadas</span><span class="p">[:</span><span class="mi">12</span><span class="p">]:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"  -"</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"  ..."</span><span class="p">)</span>
-
-<span class="c1"># El caso del caracol: el nombre viejo se pierde, el válido está presente</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">¿Está el caracol de jardín bajo su nombre actual?"</span><span class="p">,</span>
-      <span class="s2">"sí"</span> <span class="k">if</span> <span class="n">catalogo</span><span class="o">.</span><span class="n">binomio</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="s2">"Cornu aspersum"</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"no"</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Registros sin fecha exacta:"</span><span class="p">,</span> <span class="nb">int</span><span class="p">((</span><span class="o">~</span><span class="n">df</span><span class="p">[</span><span class="s2">"tiene_fecha"</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Formatos de eventDate encontrados (por largo del string):"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">crudo</span><span class="p">[</span><span class="s2">"eventDate"</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len</span><span class="p">()</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -7981,67 +8334,62 @@ más fotografiadas. La pérdida real es menor al 4% declarado.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>No emparejadas: 16 de 844 (1.9%)
-
-  - Ambrosia peruviana
-  - Carduus thoermeri
-  - Chenopodium ambrosioides
-  - Cyperus involucratus
-  - Dolichos lignosus
-  - Helix aspersa
-  - Hordeum hystrix
-  - Leontodon saxatilis
-  - Lotus uliginosus
-  - Phyla reptans
-  - Polygonum hydropiper
-  - Polygonum lapathifolium
-  ...
-
-¿Está el caracol de jardín bajo su nombre actual? sí
+<pre>Registros sin fecha exacta: 32
+Formatos de eventDate encontrados (por largo del string):
+eventDate
+4        16
+7         1
+10    48810
+16      198
+17        2
+19      123
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=25c5bed6">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e34db07e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<blockquote>
+<p><strong>Nota de implementación que costó un bug.</strong> <code>eventDate</code> llega en formatos
+mezclados: <code>2026-01-28</code>, <code>2026-01-28T07:03</code>, <code>2026-03-23T11:57:51</code> y a veces
+solo <code>2026</code>. Si se le pasa la columna entera a <code>pd.to_datetime(..., errors="coerce")</code>, pandas <strong>infiere un único formato a partir del primer
+valor</strong> y convierte a nulo todo lo que no calce. En nuestro caso el primer
+valor tenía hora, así que se perdían los 48.810 registros que traen solo
+<code>YYYY-MM-DD</code>: quedaban 198 de 49.165. La solución es recortar los primeros 10
+caracteres —la parte ISO común a todas las variantes— y parsear con formato
+explícito.</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fd1287e0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<h1 id="Paso-3-%E2%80%94-Limpieza-(parte-2):-qu%C3%A9-cuenta-como-%22da%C3%B1ina%22">Paso 3 — Limpieza (parte 2): qué cuenta como "dañina"<a class="anchor-link" href="#Paso-3-%E2%80%94-Limpieza-(parte-2):-qu%C3%A9-cuenta-como-%22da%C3%B1ina%22">¶</a></h1><p>La pregunta habla de especies invasoras <strong>dañinas</strong>. Hay que definir el criterio con
-precisión, porque GRIIS distingue dos cosas que es fácil confundir:</p>
-<table>
-<thead>
-<tr>
-<th>Categoría</th>
-<th>Qué significa</th>
-<th>Cuántas</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Exótica</strong> (<em>alien</em>)</td>
-<td>Llegó por acción humana, está establecida</td>
-<td>844</td>
-</tr>
-<tr>
-<td><strong>Invasora declarada</strong> (<code>isInvasive = "invasive"</code>)</td>
-<td>Además, hay evidencia de que causa daño</td>
-<td>246</td>
-</tr>
-</tbody>
-</table>
-<p>Las otras 598 tienen el campo <strong>vacío</strong>, y eso <em>no</em> significa "inofensiva": significa
-"no evaluada o sin evidencia suficiente". Es una diferencia importante y la vamos a
-sostener en todo el análisis: reportamos las dos categorías por separado en vez de
-mezclarlas.</p>
+<h1 id="Paso-3-%E2%80%94-De-coordenada-a-territorio">Paso 3 — De coordenada a territorio<a class="anchor-link" href="#Paso-3-%E2%80%94-De-coordenada-a-territorio">¶</a></h1><p>GBIF entrega coordenadas. Necesitamos región, comuna y saber si el punto está
+en una ciudad.</p>
+<p><strong>Por qué no usamos el campo <code>stateProvince</code> de GBIF:</strong> viene sucio y en
+formatos mezclados (<code>Region Metropolitana</code>, <code>RM</code>, <code>Santiago</code>, vacío). La
+coordenada es el dato duro del registro, así que derivamos todo de ella.</p>
+<p><strong>Comuna y región</strong> salen del centro comunal más cercano, usando el diccionario
+de <code>core/comunas.py</code> (346 comunas con coordenadas). Es una aproximación:
+usamos el <em>centro</em> de la comuna, no su polígono real.</p>
+<p><strong>Zona urbana</strong> mantiene la definición del proyecto: 30 zonas urbanas definidas
+como centro + radio en km. Un registro fuera de todos los radios es <em>rural</em>.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5585549b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9476ffaf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8049,19 +8397,14 @@ mezclarlas.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Estado del campo isInvasive:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  declaradas invasoras : </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">griis</span><span class="o">.</span><span class="n">invasora</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  campo vacío          : </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">griis</span><span class="o">.</span><span class="n">isInvasive</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">asignar_comuna</span><span class="p">,</span> <span class="n">asignar_zona_urbana</span>
 
-<span class="c1"># Convertimos el campo de texto con nulos en un booleano limpio</span>
-<span class="n">resumen</span> <span class="o">=</span> <span class="n">griis</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"kingdom"</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
-    <span class="n">exoticas</span><span class="o">=</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"count"</span><span class="p">),</span>
-    <span class="n">invasoras</span><span class="o">=</span><span class="p">(</span><span class="s2">"invasora"</span><span class="p">,</span> <span class="s2">"sum"</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">resumen</span><span class="p">[</span><span class="s2">"tasa_invasora_%"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">resumen</span><span class="o">.</span><span class="n">invasoras</span> <span class="o">/</span> <span class="n">resumen</span><span class="o">.</span><span class="n">exoticas</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Tasa de especies exóticas que llegan a declararse invasoras, por reino:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">resumen</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"exoticas"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<span class="n">zonas</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"data/zonas_urbanas.csv"</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">asignar_comuna</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">asignar_zona_urbana</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">zonas</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"entorno"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">'entorno'</span><span class="p">]</span><span class="o">==</span><span class="s1">'Urbano'</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">% de los registros cae en zona urbana"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8074,60 +8417,29 @@ mezclarlas.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Estado del campo isInvasive:
-  declaradas invasoras : 246
-  campo vacío          : 598
+<pre>entorno
+Rural     47453
+Urbano     1712
 
-Tasa de especies exóticas que llegan a declararse invasoras, por reino:
-           exoticas  invasoras  tasa_invasora_%
-kingdom                                        
-Plantae         725        195             26.9
-Animalia        114         48             42.1
-Chromista         4          2             50.0
-Bacteria          1          1            100.0
+3.5% de los registros cae en zona urbana
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=598cc375">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=79512a92">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Primer hallazgo, y sale de la limpieza:</strong> hay 725 plantas exóticas contra 114 animales
-—el problema es abrumadoramente botánico en volumen— pero <strong>el 42% de los animales
-exóticos llega a declararse invasor, contra solo el 27% de las plantas</strong>. En volumen es
-un problema de plantas; en tasa de daño, de animales.</p>
+<h3 id="Hasta-d%C3%B3nde-podemos-confiar-en-la-comuna-asignada">Hasta dónde podemos confiar en la comuna asignada<a class="anchor-link" href="#Hasta-d%C3%B3nde-podemos-confiar-en-la-comuna-asignada">¶</a></h3><p>Aquí hay que ser explícitos sobre una debilidad. Si medimos a qué distancia
+quedó cada registro del centro comunal que le asignamos:</p>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=15b45d5a">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<hr/>
-<h1 id="Paso-4-%E2%80%94-Definir-las-zonas-urbanas">Paso 4 — Definir las zonas urbanas<a class="anchor-link" href="#Paso-4-%E2%80%94-Definir-las-zonas-urbanas">¶</a></h1><p>GBIF entrega coordenadas, no ciudades. Necesitamos traducir un punto (lat, lon) a "esto
-está en Chillán". Y aquí hay que tomar decisiones metodológicas explícitas:</p>
-<p><strong>Decisión 1 — Círculos, no polígonos administrativos.</strong> Definimos cada zona urbana como
-un centro y un radio en kilómetros. Es más simple que trabajar con shapefiles comunales y
-suficiente para la escala de la pregunta. El costo es que el borde de la ciudad queda
-aproximado.</p>
-<p><strong>Decisión 2 — Radio proporcional al tamaño.</strong> El Gran Santiago usa 30 km y Curicó 10 km.
-Un radio único subestimaría las metrópolis y metería campo adentro en las ciudades chicas.</p>
-<p><strong>Decisión 3 — Conurbaciones unidas.</strong> Valparaíso, Viña del Mar y Quilpué están a menos de
-10 km entre sí: con radios separados nos contaríamos los mismos registros tres veces. Van
-como <em>Gran Valparaíso</em>. Igual con el Gran Concepción y el Gran La Serena (Coquimbo incluido).</p>
-<p>Verificamos que ninguna zona se solape con otra.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fec96346">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=be377034">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8135,9 +8447,10 @@ como <em>Gran Valparaíso</em>. Igual con el Gran Concepción y el Gran La Seren
 <div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">zonas</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"data/zonas_urbanas.csv"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Zonas urbanas definidas: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">zonas</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">zonas</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">d</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">"dist_centro_comunal_km"</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">describe</span><span class="p">([</span><span class="mf">.25</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mf">.75</span><span class="p">,</span> <span class="mf">.9</span><span class="p">,</span> <span class="mf">.99</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Registros a más de 25 km del centro comunal asignado: "</span>
+      <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">(</span><span class="o">~</span><span class="n">df</span><span class="p">[</span><span class="s1">'comuna_confiable'</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="o">~</span><span class="n">df</span><span class="p">[</span><span class="s1">'comuna_confiable'</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">%)"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8150,111 +8463,56 @@ como <em>Gran Valparaíso</em>. Igual con el Gran Concepción y el Gran La Seren
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Zonas urbanas definidas: 30
+<pre>count    49165.0
+mean        31.3
+std         13.2
+min          0.0
+25%         21.4
+50%         34.4
+75%         39.4
+90%         48.0
+99%         59.5
+max        617.3
+
+Registros a más de 25 km del centro comunal asignado: 29,841 (61%)
 </pre>
 </div>
 </div>
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[8]:</div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
-<div>
-<style scoped="">
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-<thead>
-<tr style="text-align: right;">
-<th></th>
-<th>zona</th>
-<th>region</th>
-<th>lat</th>
-<th>lon</th>
-<th>radio_km</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>Gran Santiago</td>
-<td>Metropolitana</td>
-<td>-33.450</td>
-<td>-70.660</td>
-<td>30</td>
-</tr>
-<tr>
-<th>1</th>
-<td>Gran Valparaiso</td>
-<td>Valparaiso</td>
-<td>-33.040</td>
-<td>-71.550</td>
-<td>18</td>
-</tr>
-<tr>
-<th>2</th>
-<td>Gran Concepcion</td>
-<td>Biobio</td>
-<td>-36.827</td>
-<td>-73.050</td>
-<td>20</td>
-</tr>
-<tr>
-<th>3</th>
-<td>Gran La Serena</td>
-<td>Coquimbo</td>
-<td>-29.930</td>
-<td>-71.290</td>
-<td>15</td>
-</tr>
-<tr>
-<th>4</th>
-<td>Antofagasta</td>
-<td>Antofagasta</td>
-<td>-23.650</td>
-<td>-70.400</td>
-<td>12</td>
-</tr>
-<tr>
-<th>5</th>
-<td>Temuco</td>
-<td>Araucania</td>
-<td>-38.739</td>
-<td>-72.598</td>
-<td>12</td>
-</tr>
-<tr>
-<th>6</th>
-<td>Iquique</td>
-<td>Tarapaca</td>
-<td>-20.214</td>
-<td>-70.152</td>
-<td>12</td>
-</tr>
-<tr>
-<th>7</th>
-<td>Rancagua</td>
-<td>O'Higgins</td>
-<td>-34.170</td>
-<td>-70.744</td>
-<td>12</td>
-</tr>
-</tbody>
-</table>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f45bb80f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>La mediana es de ~34 km. Eso pasa porque el 96% de los registros son rurales y
+las comunas del sur son enormes: un punto en medio de Aysén puede estar a 60 km
+del pueblo más cercano y aun así ser "su" comuna.</p>
+<p><strong>Consecuencia metodológica:</strong> la columna <code>comuna</code> sirve para mostrar una
+referencia legible en la app ("cerca de Cochamó"), pero <strong>no</strong> para agregar
+resultados. El análisis del notebook 02 trabaja a nivel de <strong>región</strong> y de
+<strong>zona urbana</strong>, que sí son robustos. Los registros con comuna dudosa quedan
+marcados en <code>comuna_confiable</code>.</p>
 </div>
 </div>
 </div>
 </div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=58cb73db">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=455da279">
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<hr/>
+<h1 id="Paso-4-%E2%80%94-El-hallazgo:-no-todos-los-registros-se-generaron-igual">Paso 4 — El hallazgo: no todos los registros se generaron igual<a class="anchor-link" href="#Paso-4-%E2%80%94-El-hallazgo:-no-todos-los-registros-se-generaron-igual">¶</a></h1><p>Este es el paso más importante del notebook, y no estaba planificado. Apareció
+al revisar de dónde vienen los datos.</p>
+<p>Miremos <code>basisOfRecord</code>, el campo que dice <strong>cómo</strong> se generó cada registro:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=31db6daa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8262,26 +8520,7 @@ como <em>Gran Valparaíso</em>. Igual con el Gran Concepción y el Gran La Seren
 <div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.datos</span><span class="w"> </span><span class="kn">import</span> <span class="n">distancia_km</span>
-
-<span class="c1"># Control de solapamiento: ninguna pareja debe estar más cerca que la suma de sus radios</span>
-<span class="n">solapes</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">zonas</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">zonas</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">j</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">distancia_km</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">lon</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">a</span><span class="o">.</span><span class="n">radio_km</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">radio_km</span><span class="p">:</span>
-            <span class="n">solapes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">zona</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">zona</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="o">.</span><span class="n">radio_km</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">radio_km</span><span class="p">))</span>
-
-<span class="k">if</span> <span class="n">solapes</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Zonas que se solapan (habría doble conteo):"</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">solapes</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2"> km de separación, radios suman </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2"> km"</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Sin solapamientos: ninguna zona comparte territorio con otra."</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cobertura: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">zonas</span><span class="p">)</span><span class="si">}</span><span class="s2"> zonas en </span><span class="si">{</span><span class="n">zonas</span><span class="o">.</span><span class="n">region</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">}</span><span class="s2"> regiones, "</span>
-          <span class="sa">f</span><span class="s2">"desde Arica (</span><span class="si">{</span><span class="n">zonas</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">°) hasta Punta Arenas (</span><span class="si">{</span><span class="n">zonas</span><span class="o">.</span><span class="n">lat</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">°)"</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">crudo</span><span class="p">[</span><span class="s2">"basisOfRecord"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -8293,57 +8532,32 @@ como <em>Gran Valparaíso</em>. Igual con el Gran Concepción y el Gran La Seren
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>2026-07-27 14:56:08.274 WARNING streamlit.runtime.caching.cache_data_api: No runtime found, using MemoryCacheStorageManager
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>2026-07-27 14:56:08.274 WARNING streamlit.runtime.caching.cache_data_api: No runtime found, using MemoryCacheStorageManager
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Zonas que se solapan (habría doble conteo):
-  Puerto Montt — Puerto Varas: 17.4 km de separación, radios suman 25 km
+<pre>basisOfRecord
+MACHINE_OBSERVATION    48575
+HUMAN_OBSERVATION        386
+PRESERVED_SPECIMEN       182
+MATERIAL_SAMPLE           20
+MATERIAL_CITATION          2
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7cf22ea8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9c8f1796">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<hr/>
-<h1 id="Paso-5-%E2%80%94-Consultar-GBIF-por-zona">Paso 5 — Consultar GBIF por zona<a class="anchor-link" href="#Paso-5-%E2%80%94-Consultar-GBIF-por-zona">¶</a></h1><p>Aquí está la decisión técnica que hace viable el proyecto.</p>
-<p><strong>El enfoque ingenuo</strong> sería descargar los 571.091 registros y clasificarlos localmente.
-A 300 registros por petición, son ~1.900 peticiones y varios cientos de MB.</p>
-<p><strong>El enfoque que usamos</strong> son las <strong>facetas</strong> de GBIF: en una sola petición, la API
-devuelve el conteo agrupado por especie dentro de un radio geográfico. Filtramos además
-por los <code>speciesKey</code> de nuestras 812 exóticas, en lotes de 120 para no exceder el largo
-máximo de la URL.</p>
-<p>Resultado: <strong>~30 zonas × 7 lotes ≈ 210 peticiones</strong> en vez de 1.900, y sin descargar ni
-un registro individual.</p>
-<p>Cada consulta lleva estos filtros fijos:</p>
-<pre><code>country=CL                  solo Chile
-hasCoordinate=true          descarta registros sin coordenada
-hasGeospatialIssue=false    descarta coordenadas marcadas como erróneas por GBIF
-mediaType=StillImage        SOLO registros con fotografía
-</code></pre>
-<p>El último filtro es el que convierte esto en un dataset de imágenes: cada registro
-contado tiene una foto real asociada.</p>
+<p>El 98,8% son <code>MACHINE_OBSERVATION</code> — observación automatizada, no una persona
+mirando un animal. Eso es inesperado para datos de biodiversidad, así que
+conviene ver quién los publica:</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=11b91c10">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bda748e2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8351,26 +8565,7 @@ contado tiene una foto real asociada.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">ejecutar_ingesta</span>
-
-<span class="c1"># Los CSV procesados quedan en caché. Poner True para volver a consultar GBIF (~3 min).</span>
-<span class="n">FORZAR_DESCARGA</span> <span class="o">=</span> <span class="kc">False</span>
-
-<span class="n">rutas</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">DIR_PROC</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.csv"</span>
-         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"zonas_especies"</span><span class="p">,</span> <span class="s2">"zonas_resumen"</span><span class="p">,</span> <span class="s2">"fotos_muestra"</span><span class="p">]}</span>
-
-<span class="k">if</span> <span class="n">FORZAR_DESCARGA</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rutas</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Consultando GBIF, esto toma unos minutos…"</span><span class="p">)</span>
-    <span class="n">ejecutar_ingesta</span><span class="p">()</span>
-
-<span class="n">zonas_especies</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">rutas</span><span class="p">[</span><span class="s2">"zonas_especies"</span><span class="p">])</span>
-<span class="n">zonas_resumen</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">rutas</span><span class="p">[</span><span class="s2">"zonas_resumen"</span><span class="p">])</span>
-<span class="n">fotos</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">rutas</span><span class="p">[</span><span class="s2">"fotos_muestra"</span><span class="p">])</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"zonas_especies : </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">zonas_especies</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> filas  (una por zona × especie encontrada)"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"zonas_resumen  : </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">zonas_resumen</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> filas  (una por zona urbana)"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"fotos_muestra  : </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fotos</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> filas  (registros con URL de fotografía)"</span><span class="p">)</span>
-<span class="n">zonas_especies</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">crudo</span><span class="p">[</span><span class="s2">"institutionCode"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">"(vacío)"</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -8383,96 +8578,34 @@ contado tiene una foto real asociada.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>zonas_especies :   2543 filas  (una por zona × especie encontrada)
-zonas_resumen  :     30 filas  (una por zona urbana)
-fotos_muestra  :    180 filas  (registros con URL de fotografía)
+<pre>institutionCode
+Corporación Nacional Forestal (CONAF)                            48303
+iNaturalist                                                        336
+MMA:GEFMONT                                                        254
+MSB                                                                 96
+CNX                                                                 51
+Museo de Zoología de la Universidad de Concepción (MZUC-UCCC)       49
 </pre>
 </div>
 </div>
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
-<div>
-<style scoped="">
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-<thead>
-<tr style="text-align: right;">
-<th></th>
-<th>zona</th>
-<th>speciesKey</th>
-<th>registros</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>Gran Santiago</td>
-<td>1340503</td>
-<td>386</td>
-</tr>
-<tr>
-<th>1</th>
-<td>Gran Santiago</td>
-<td>3117424</td>
-<td>92</td>
-</tr>
-<tr>
-<th>2</th>
-<td>Gran Santiago</td>
-<td>3190653</td>
-<td>86</td>
-</tr>
-<tr>
-<th>3</th>
-<td>Gran Santiago</td>
-<td>2979474</td>
-<td>69</td>
-</tr>
-<tr>
-<th>4</th>
-<td>Gran Santiago</td>
-<td>5371743</td>
-<td>31</td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=881dd131">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0d1d0c2d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="El-denominador:-por-qu%C3%A9-necesitamos-el-total-de-registros-de-cada-zona">El denominador: por qué necesitamos el total de registros de cada zona<a class="anchor-link" href="#El-denominador:-por-qu%C3%A9-necesitamos-el-total-de-registros-de-cada-zona">¶</a></h3><p>Este es el punto metodológico más importante de todo el proyecto.</p>
-<p>Si comparamos ciudades por <strong>número de registros invasores</strong>, Santiago gana siempre — pero
-no porque esté más invadido, sino porque tiene millones de habitantes y miles de personas
-usando iNaturalist. Estaríamos midiendo <strong>cuánta gente saca fotos</strong>, no cuánta invasión hay.</p>
-<p>Por eso <code>zonas_resumen</code> incluye <code>registros_totales</code>: <strong>todos</strong> los registros fotográficos de
-esa zona, de cualquier especie, nativa o exótica. La métrica que usamos es entonces:</p>
-<p>$$\text{presión de invasión} = \frac{\text{registros de especies exóticas}}{\text{registros totales de la zona}}$$</p>
-<p>Como el esfuerzo de observación afecta al numerador y al denominador por igual, <strong>se
-cancela</strong>. Una proporción sí es comparable entre ciudades; un conteo bruto no.</p>
+<p><strong>48.303 de 49.165 registros (98,2%) son de CONAF</strong>, la Corporación Nacional
+Forestal, como observación automatizada. Es un programa de <strong>cámaras trampa en
+áreas silvestres protegidas</strong>.</p>
+<p>Esto reordena el análisis completo. Clasificamos cada registro según <em>cómo</em> se
+generó, no según quién lo publica:</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ebcdc601">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6b7f3564">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8480,8 +8613,10 @@ cancela</strong>. Una proporción sí es comparable entre ciudades; un conteo br
 <div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">zonas_resumen</span><span class="p">[[</span><span class="s2">"zona"</span><span class="p">,</span> <span class="s2">"region"</span><span class="p">,</span> <span class="s2">"radio_km"</span><span class="p">,</span> <span class="s2">"registros_totales"</span><span class="p">]]</span> \
-    <span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"registros_totales"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">clasificar_fuente</span>
+
+<span class="n">df</span><span class="p">[</span><span class="s2">"fuente"</span><span class="p">]</span> <span class="o">=</span> <span class="n">clasificar_fuente</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"fuente"</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s2">"clase_modelo"</span><span class="p">],</span> <span class="n">margins</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">margins_name</span><span class="o">=</span><span class="s2">"Total"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8511,83 +8646,55 @@ cancela</strong>. Una proporción sí es comparable entre ciudades; un conteo br
 <table border="1" class="dataframe">
 <thead>
 <tr style="text-align: right;">
+<th>clase_modelo</th>
+<th>jabali</th>
+<th>liebre</th>
+<th>rata gris</th>
+<th>Total</th>
+</tr>
+<tr>
+<th>fuente</th>
 <th></th>
-<th>zona</th>
-<th>region</th>
-<th>radio_km</th>
-<th>registros_totales</th>
+<th></th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<th>0</th>
-<td>Gran Santiago</td>
-<td>Metropolitana</td>
-<td>30</td>
-<td>48832</td>
+<th>Camara trampa (CONAF)</th>
+<td>3114</td>
+<td>45189</td>
+<td>0</td>
+<td>48303</td>
 </tr>
 <tr>
-<th>2</th>
-<td>Gran Concepcion</td>
-<td>Biobio</td>
-<td>20</td>
-<td>30798</td>
+<th>Ciencia ciudadana (iNaturalist)</th>
+<td>37</td>
+<td>256</td>
+<td>43</td>
+<td>336</td>
 </tr>
 <tr>
-<th>1</th>
-<td>Gran Valparaiso</td>
-<td>Valparaiso</td>
-<td>18</td>
-<td>20519</td>
+<th>Coleccion museologica</th>
+<td>0</td>
+<td>31</td>
+<td>173</td>
+<td>204</td>
 </tr>
 <tr>
-<th>3</th>
-<td>Gran La Serena</td>
-<td>Coquimbo</td>
+<th>Otros estudios</th>
+<td>5</td>
+<td>302</td>
 <td>15</td>
-<td>19609</td>
+<td>322</td>
 </tr>
 <tr>
-<th>14</th>
-<td>Valdivia</td>
-<td>Los Rios</td>
-<td>12</td>
-<td>8698</td>
-</tr>
-<tr>
-<th>21</th>
-<td>San Antonio</td>
-<td>Valparaiso</td>
-<td>12</td>
-<td>8407</td>
-</tr>
-<tr>
-<th>5</th>
-<td>Temuco</td>
-<td>Araucania</td>
-<td>12</td>
-<td>4368</td>
-</tr>
-<tr>
-<th>18</th>
-<td>Punta Arenas</td>
-<td>Magallanes</td>
-<td>12</td>
-<td>4249</td>
-</tr>
-<tr>
-<th>11</th>
-<td>Puerto Montt</td>
-<td>Los Lagos</td>
-<td>15</td>
-<td>3408</td>
-</tr>
-<tr>
-<th>9</th>
-<td>Arica</td>
-<td>Arica y Parinacota</td>
-<td>12</td>
-<td>2794</td>
+<th>Total</th>
+<td>3156</td>
+<td>45778</td>
+<td>231</td>
+<td>49165</td>
 </tr>
 </tbody>
 </table>
@@ -8597,23 +8704,18 @@ cancela</strong>. Una proporción sí es comparable entre ciudades; un conteo br
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7ce9774a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fad48e04">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<hr/>
-<h1 id="Paso-6-%E2%80%94-Limpieza-(parte-3):-el-problema-del-tama%C3%B1o-de-muestra">Paso 6 — Limpieza (parte 3): el problema del tamaño de muestra<a class="anchor-link" href="#Paso-6-%E2%80%94-Limpieza-(parte-3):-el-problema-del-tama%C3%B1o-de-muestra">¶</a></h1><p>Las zonas chicas tienen pocos registros, y una proporción calculada sobre pocos datos es
-inestable: si una zona tiene 40 registros y 15 son exóticos, el 37,5% resultante puede
-moverse muchísimo con un puñado de observaciones más.</p>
-<p>Fijamos un <strong>umbral mínimo de 500 registros totales</strong> por zona para incluirla en los
-rankings. Es una decisión arbitraria pero necesaria, y la dejamos explícita: las zonas
-excluidas se reportan, no se esconden.</p>
+<p>Y ahora la tabla que justifica todo el rediseño: <strong>el mismo indicador, calculado
+sobre la misma especie, cambia radicalmente según la fuente que la registró.</strong></p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a86ff003">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=340d2e24">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8621,17 +8723,13 @@ excluidas se reportan, no se esconden.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">UMBRAL_MINIMO</span> <span class="o">=</span> <span class="mi">500</span>
-
-<span class="n">excluidas</span> <span class="o">=</span> <span class="n">zonas_resumen</span><span class="p">[</span><span class="n">zonas_resumen</span><span class="o">.</span><span class="n">registros_totales</span> <span class="o">&lt;</span> <span class="n">UMBRAL_MINIMO</span><span class="p">]</span>
-<span class="n">incluidas</span> <span class="o">=</span> <span class="n">zonas_resumen</span><span class="p">[</span><span class="n">zonas_resumen</span><span class="o">.</span><span class="n">registros_totales</span> <span class="o">&gt;=</span> <span class="n">UMBRAL_MINIMO</span><span class="p">]</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Zonas incluidas en el análisis : </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">incluidas</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Zonas excluidas por pocos datos: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">excluidas</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">excluidas</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">excluidas</span><span class="p">[[</span><span class="s2">"zona"</span><span class="p">,</span> <span class="s2">"region"</span><span class="p">,</span> <span class="s2">"registros_totales"</span><span class="p">]]</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Estas zonas quedan fuera de los rankings pero se conservan en los datos."</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">comp</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s2">"fuente"</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s2">"clase_modelo"</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s2">"entorno"</span><span class="p">,</span>
+                      <span class="n">aggfunc</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="s2">"Urbano"</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="mi">1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"PORCENTAJE DE REGISTROS EN ZONA URBANA (%)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">LATITUD MEDIANA</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s2">"fuente"</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s2">"clase_modelo"</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s2">"lat"</span><span class="p">,</span>
+                     <span class="n">aggfunc</span><span class="o">=</span><span class="s2">"median"</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -8644,56 +8742,78 @@ excluidas se reportan, no se esconden.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Zonas incluidas en el análisis : 25
-Zonas excluidas por pocos datos: 5
+<pre>PORCENTAJE DE REGISTROS EN ZONA URBANA (%)
 
-       zona      region  registros_totales
-     Calama Antofagasta                321
-    Copiapo     Atacama                425
-Los Angeles      Biobio                465
-     Ovalle    Coquimbo                456
-    Linares       Maule                215
+clase_modelo                     jabali  liebre  rata gris
+fuente                                                    
+Camara trampa (CONAF)               0.0     3.5        NaN
+Ciencia ciudadana (iNaturalist)    13.5     8.6       55.8
+Coleccion museologica               NaN     6.5       34.7
+Otros estudios                     20.0     1.0        0.0
 
-Estas zonas quedan fuera de los rankings pero se conservan en los datos.
+
+LATITUD MEDIANA
+
+clase_modelo                     jabali  liebre  rata gris
+fuente                                                    
+Camara trampa (CONAF)            -41.06  -45.97        NaN
+Ciencia ciudadana (iNaturalist)  -39.40  -47.11     -33.79
+Coleccion museologica               NaN  -32.65     -36.54
+Otros estudios                   -44.37  -33.65     -22.43
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=11945836">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c8aae86e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Un-sesgo-que-NO-podemos-eliminar,-y-hay-que-declararlo">Un sesgo que NO podemos eliminar, y hay que declararlo<a class="anchor-link" href="#Un-sesgo-que-NO-podemos-eliminar,-y-hay-que-declararlo">¶</a></h3><p>La proporción controla el esfuerzo de observación, pero queda un sesgo de fondo:
-<strong>las especies exóticas son más fáciles de fotografiar que las nativas.</strong> Viven donde
-está la gente, muchas son grandes y llamativas (una cotorra verde chillona contra un
-insecto nativo de 3 mm), y varias son familiares para quien viene de Europa.</p>
-<p>Eso significa que nuestras proporciones probablemente <strong>sobreestiman</strong> la presencia real
-de exóticas. Lo que sí es válido es la <strong>comparación entre ciudades</strong>: el sesgo opera de
-forma parecida en todas, así que el <em>ranking</em> se sostiene incluso si los valores absolutos
-están inflados.</p>
-<p>Es una limitación honesta del dato disponible, no un error corregible.</p>
+<h3 id="Qu%C3%A9-significa-esto">Qué significa esto<a class="anchor-link" href="#Qu%C3%A9-significa-esto">¶</a></h3><p>Tres lecturas concretas:</p>
+<ol>
+<li><p><strong>CONAF no tiene ni un registro de rata gris.</strong> Cero de 48.303. No porque no
+haya ratas en Chile, sino porque no se instalan cámaras trampa en ciudades.
+La especie más urbana de las tres es invisible para la fuente que aporta el
+98% de los datos.</p>
+</li>
+<li><p><strong>El jabalí pasa de 0,0% urbano a 13,5%</strong> según si lo miran las cámaras de
+CONAF o la gente en iNaturalist. Un mismo animal, dos números
+irreconciliables.</p>
+</li>
+<li><p><strong>La latitud mediana de la liebre es −45,97</strong> en los datos de CONAF, que es
+Aysén. Eso no dice que la liebre viva preferentemente en Aysén: dice que
+<strong>CONAF tiene muchas cámaras en Aysén</strong>.</p>
+</li>
+</ol>
+<p>Es un caso de libro de <strong>sesgo de muestreo</strong>: el patrón que uno mediría al
+mezclar las fuentes describe <em>dónde se observó</em>, no <em>dónde está la especie</em>.
+Confundir ambas cosas es el error que este paso evita.</p>
+<p><strong>Cómo lo tratamos.</strong> <code>fuente</code> pasa a ser una columna de primera clase. El
+notebook 02 reporta cada resultado territorial <strong>desagregado por fuente</strong>, y la
+app deja filtrar por ella con una advertencia visible. No corregimos el sesgo
+—no se puede con estos datos—, pero lo hacemos imposible de ignorar.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0f5a9af9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e7fdaef0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <hr/>
-<h1 id="Paso-7-%E2%80%94-La-dimensi%C3%B3n-fotogr%C3%A1fica">Paso 7 — La dimensión fotográfica<a class="anchor-link" href="#Paso-7-%E2%80%94-La-dimensi%C3%B3n-fotogr%C3%A1fica">¶</a></h1><p>Como cada registro tiene una imagen, guardamos también una muestra con las URLs. Esto
-sirve para dos cosas: ilustrar el catálogo de la aplicación con fotos reales tomadas en
-Chile, y ser el punto de partida si más adelante entrenamos el clasificador.</p>
+<h1 id="Paso-5-%E2%80%94-Fotos-con-licencia-libre">Paso 5 — Fotos con licencia libre<a class="anchor-link" href="#Paso-5-%E2%80%94-Fotos-con-licencia-libre">¶</a></h1><p>Cada registro de GBIF puede traer imágenes. Nos sirven para ilustrar el
+catálogo de la app con fotos reales tomadas en Chile.</p>
+<p>Priorizamos por licencia: <strong>CC0</strong> (dominio público) primero, luego <strong>CC-BY</strong>, y
+<strong>CC-BY-NC</strong> al final, porque restringe el uso comercial.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a35021a0">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4dde3cf1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8701,11 +8821,13 @@ Chile, y ser el punto de partida si más adelante entrenamos el clasificador.</p
 <div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Licencias de las fotografías de la muestra:"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">fotos</span><span class="o">.</span><span class="n">licencia</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Registros con URL de foto disponible: </span><span class="si">{</span><span class="n">fotos</span><span class="o">.</span><span class="n">foto_url</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2"> de </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fotos</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">fotos</span><span class="p">[[</span><span class="s2">"nombre_gbif"</span><span class="p">,</span> <span class="s2">"anio"</span><span class="p">,</span> <span class="s2">"region_gbif"</span><span class="p">,</span> <span class="s2">"licencia"</span><span class="p">,</span> <span class="s2">"foto_url"</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">fotos_libres</span>
+
+<span class="n">fotos</span> <span class="o">=</span> <span class="n">fotos_libres</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">por_especie</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fotos</span><span class="p">)</span><span class="si">}</span><span class="s2"> fotos seleccionadas</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">fotos</span><span class="p">[</span><span class="s2">"license"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Foto de portada de cada especie (la de mejor licencia):"</span><span class="p">)</span>
+<span class="n">fotos</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"nombre_comun"</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()[[</span><span class="s2">"anio"</span><span class="p">,</span> <span class="s2">"region"</span><span class="p">,</span> <span class="s2">"license"</span><span class="p">]]</span>
 </pre></div>
 </div>
 </div>
@@ -8718,13 +8840,14 @@ Chile, y ser el punto de partida si más adelante entrenamos el clasificador.</p
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Licencias de las fotografías de la muestra:
-licencia
-http://creativecommons.org/licenses/by-nc/4.0/legalcode       149
-http://creativecommons.org/licenses/by/4.0/legalcode           24
-http://creativecommons.org/publicdomain/zero/1.0/legalcode      7
+<pre>36 fotos seleccionadas
 
-Registros con URL de foto disponible: 180 de 180
+license
+http://creativecommons.org/licenses/by/4.0/legalcode          22
+http://creativecommons.org/publicdomain/zero/1.0/legalcode     8
+http://creativecommons.org/licenses/by-nc/4.0/legalcode        6
+
+Foto de portada de cada especie (la de mejor licencia):
 </pre>
 </div>
 </div>
@@ -8749,53 +8872,35 @@ Registros con URL de foto disponible: 180 de 180
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>nombre_gbif</th>
 <th>anio</th>
-<th>region_gbif</th>
-<th>licencia</th>
-<th>foto_url</th>
+<th>region</th>
+<th>license</th>
+</tr>
+<tr>
+<th>nombre_comun</th>
+<th></th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<th>0</th>
-<td>Bombus terrestris</td>
-<td>2026</td>
-<td>Bío-Bío</td>
-<td>http://creativecommons.org/licenses/by-nc/4.0/...</td>
-<td>https://inaturalist-open-data.s3.amazonaws.com...</td>
+<th>Jabali</th>
+<td>2024.0</td>
+<td>Araucania</td>
+<td>http://creativecommons.org/publicdomain/zero/1...</td>
 </tr>
 <tr>
-<th>1</th>
-<td>Bombus terrestris</td>
-<td>2026</td>
-<td>Magallanes y Antártica Chilena</td>
-<td>http://creativecommons.org/licenses/by-nc/4.0/...</td>
-<td>https://inaturalist-open-data.s3.amazonaws.com...</td>
+<th>Liebre europea</th>
+<td>2026.0</td>
+<td>Magallanes</td>
+<td>http://creativecommons.org/publicdomain/zero/1...</td>
 </tr>
 <tr>
-<th>2</th>
-<td>Bombus terrestris</td>
-<td>2026</td>
-<td>Libertador General Bernardo O'Higgins</td>
-<td>http://creativecommons.org/licenses/by-nc/4.0/...</td>
-<td>https://inaturalist-open-data.s3.amazonaws.com...</td>
-</tr>
-<tr>
-<th>3</th>
-<td>Harmonia axyridis</td>
-<td>2026</td>
-<td>Los Lagos</td>
-<td>http://creativecommons.org/licenses/by-nc/4.0/...</td>
-<td>https://inaturalist-open-data.s3.amazonaws.com...</td>
-</tr>
-<tr>
-<th>4</th>
-<td>Harmonia axyridis</td>
-<td>2026</td>
-<td>Bío-Bío</td>
-<td>http://creativecommons.org/licenses/by-nc/4.0/...</td>
-<td>https://inaturalist-open-data.s3.amazonaws.com...</td>
+<th>Rata gris</th>
+<td>2024.0</td>
+<td>Metropolitana</td>
+<td>http://creativecommons.org/publicdomain/zero/1...</td>
 </tr>
 </tbody>
 </table>
@@ -8805,26 +8910,20 @@ Registros con URL de foto disponible: 180 de 180
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9e65b885">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e7129fff">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Nota sobre licencias y uso de las imágenes.</strong> La mayoría es CC-BY-NC 4.0: se pueden usar
-citando al autor, <strong>sin fines comerciales</strong>. Para este proyecto académico está bien, pero
-hay que citar la fuente en la app. Si algún día se usara comercialmente, habría que
-filtrar solo las CC0 y CC-BY.</p>
-<p>También aparece aquí el desorden de <code>stateProvince</code> en GBIF, que es texto libre escrito
-por cada observador: conviven <code>"Región del Bíobío"</code> y <code>"Bío-Bío"</code> para la misma región, y
-hay códigos numéricos sin normalizar. <strong>Nosotros no usamos ese campo</strong> — asignamos la zona
-por distancia a las coordenadas, que es un dato numérico y confiable. Vale la pena
-mostrarlo porque es la trampa evidente en la que caería un análisis que confiara en el
-nombre de la región.</p>
+<hr/>
+<h1 id="Paso-6-%E2%80%94-Guardar-los-datos-procesados">Paso 6 — Guardar los datos procesados<a class="anchor-link" href="#Paso-6-%E2%80%94-Guardar-los-datos-procesados">¶</a></h1><p><code>ejecutar_ingesta()</code> corre el pipeline completo y deja las tablas en
+<code>data/procesado/</code>. Se puede llamar de una sola vez; los pasos anteriores fueron
+para mostrar qué hace por dentro.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=544558f9">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6a5b0f72">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8832,8 +8931,9 @@ nombre de la región.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Ejemplos del desorden en stateProvince (campo de texto libre de GBIF):"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">fotos</span><span class="o">.</span><span class="n">region_gbif</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">ejecutar_ingesta</span>
+
+<span class="n">salidas</span> <span class="o">=</span> <span class="n">ejecutar_ingesta</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -8846,27 +8946,86 @@ nombre de la región.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Ejemplos del desorden en stateProvince (campo de texto libre de GBIF):
-region_gbif
-Región Metropolitana de Santiago             47
-Valparaíso                                   37
-Bío-Bío                                      25
-Los Lagos                                    18
-Magallanes y Antártica Chilena               15
-Libertador General Bernardo O'Higgins        11
-Coquimbo                                      8
-Los Ríos                                      8
-Araucanía                                     5
-Maule                                         4
-Tarapacá                                      1
-Aisén del General Carlos Ibáñez del Campo     1
+<pre>1/5 Descargando ocurrencias de GBIF (con cache en data/crudo/)…
+     49,165 registros crudos de 3 especies
+2/5 Limpiando…
+     49,165 registros limpios (0 descartados)
+3/5 Asignando comuna, region y zona urbana…
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>     1,712 urbanos / 47,453 rurales
+4/5 Construyendo tablas de analisis…
+5/5 Guardando en data/procesado/…
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>     ocurrencias.csv  (49,165 filas)
+     limpieza_bitacora.csv  (7 filas)
+     especies_objetivo.csv  (3 filas)
+     resumen_especie.csv  (3 filas)
+     resumen_fuente.csv  (10 filas)
+     resumen_region.csv  (15 filas)
+     resumen_zona.csv  (30 filas)
+     serie_temporal.csv  (30 filas)
+     fotos_muestra.csv  (36 filas)
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=abb4783f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7bc69e71">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>La publicación de los datos que consume la aplicación es un paso <strong>aparte</strong> a
+propósito: la ingesta es análisis, y no debería sobrescribir en silencio los
+archivos que lee la app.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e826607c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">core.ingesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">publicar_para_app</span>
+
+<span class="n">publicar_para_app</span><span class="p">(</span><span class="n">salidas</span><span class="p">[</span><span class="s2">"ocurrencias"</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>     especies.csv        (3 filas)
+     32 registros sin fecha exacta quedan fuera del mapa (0.07% del total)
+     avistamientos.csv   (49,133 filas)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b296a061">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8884,59 +9043,56 @@ Aisén del General Carlos Ibáñez del Campo     1
 <tbody>
 <tr>
 <td>1</td>
-<td>GRIIS no tiene región ni fecha</td>
-<td>Cruzamos con GBIF, que sí tiene coordenadas</td>
+<td>GRIIS ya no aporta: las especies están fijadas por el modelo</td>
+<td>Eliminamos el registro y el emparejamiento taxonómico; usamos <code>speciesKey</code> directo</td>
 </tr>
 <tr>
 <td>2</td>
-<td>Nombres con autoría (<code>"Acacia dealbata Link"</code>)</td>
-<td>Extrajimos el binomio género + especie</td>
+<td>Sinónimos taxonómicos (<em>Neovison</em> / <em>Neogale</em>)</td>
+<td>Desaparece como problema al consultar por <code>speciesKey</code> en vez de por nombre</td>
 </tr>
 <tr>
 <td>3</td>
-<td>Sinónimos antiguos (<code>Helix aspersa</code>)</td>
-<td>Emparejamos por <code>speciesKey</code>, no por texto</td>
+<td><code>eventDate</code> en 5 formatos; pandas infiere uno y descarta el resto</td>
+<td>Recorte a los 10 primeros caracteres + formato explícito (rescató 48.935 registros)</td>
 </tr>
 <tr>
 <td>4</td>
-<td><code>isInvasive</code> vacío en 598 filas</td>
-<td>Separamos "exótica" de "invasora declarada"</td>
+<td><code>stateProvince</code> de GBIF sucio e inconsistente</td>
+<td>No lo usamos: derivamos región y comuna de la coordenada</td>
 </tr>
 <tr>
 <td>5</td>
-<td>Conurbaciones se contarían dos veces</td>
-<td>Unimos Gran Valparaíso, Concepción y La Serena</td>
+<td>Comunas enormes en el sur: la comuna asignada queda a 34 km de mediana</td>
+<td>La marcamos como poco confiable y agregamos por región, no por comuna</td>
 </tr>
 <tr>
 <td>6</td>
-<td>Ciudades con distinto tamaño</td>
-<td>Radio proporcional, verificado sin solapes</td>
+<td>Registros de ausencia contarían como avistamientos</td>
+<td>Filtrados por <code>occurrenceStatus</code></td>
 </tr>
 <tr>
 <td>7</td>
-<td>Más observadores ≠ más invasión</td>
-<td>Normalizamos por registros totales de la zona</td>
+<td><strong>El 98% de los datos son cámaras trampa de CONAF en áreas protegidas</strong></td>
+<td><strong><code>fuente</code> como dimensión de primera clase; todo resultado territorial se reporta desagregado</strong></td>
 </tr>
 <tr>
 <td>8</td>
-<td>Zonas con muy pocos datos</td>
-<td>Umbral de 500 registros, exclusiones reportadas</td>
+<td>Desbalance de 198:1 entre liebre y rata gris</td>
+<td>Se reporta siempre junto al indicador; nunca se comparan volúmenes absolutos entre especies</td>
 </tr>
 <tr>
 <td>9</td>
-<td><code>stateProvince</code> sucio en GBIF</td>
-<td>No lo usamos: asignamos zona por coordenadas</td>
+<td>Territorio insular distorsionaría el análisis latitudinal</td>
+<td>Marcado en <code>territorio</code> (resultó ser 1 solo registro)</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Archivos generados en <code>data/procesado/</code>:</strong></p>
-<ul>
-<li><code>catalogo_especies.csv</code> — 812 especies exóticas con su <code>speciesKey</code> de GBIF</li>
-<li><code>zonas_especies.csv</code> — registros fotográficos por zona urbana × especie</li>
-<li><code>zonas_resumen.csv</code> — 30 zonas con su total de registros (el denominador)</li>
-<li><code>fotos_muestra.csv</code> — muestra de registros con URL de imagen y licencia</li>
-</ul>
-<p>El análisis continúa en <a href="02_analisis_urbano.ipynb"><code>02_analisis_urbano.ipynb</code></a>.</p>
+<h2 id="Lo-que-queda-listo-para-el-an%C3%A1lisis">Lo que queda listo para el análisis<a class="anchor-link" href="#Lo-que-queda-listo-para-el-an%C3%A1lisis">¶</a></h2><p><code>data/procesado/ocurrencias.csv</code> — 49.165 registros de las tres especies, con
+región, comuna, zona urbana, entorno, fuente y fecha normalizada. Más las
+tablas agregadas (<code>resumen_especie</code>, <code>resumen_fuente</code>, <code>resumen_region</code>,
+<code>resumen_zona</code>, <code>serie_temporal</code>) y la muestra de fotos.</p>
+<p>El notebook <strong>02_analisis_territorial</strong> responde la pregunta con estos datos.</p>
 </div>
 </div>
 </div>

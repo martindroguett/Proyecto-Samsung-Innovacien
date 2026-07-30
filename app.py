@@ -1,6 +1,11 @@
 """Proyecto Innovacien — deteccion de especies invasoras a partir de fotos.
 
+El proyecto trabaja sobre las TRES especies que el modelo YOLO11 sabe reconocer
+—jabali, liebre europea y rata gris— y solo sobre esas tres. Catalogo, mapa y
+analisis comparten ese mismo alcance.
+
 Ejecutar con:  streamlit run app.py
+Regenerar los datos:  python -m core.ingesta
 
 Cada pestana vive en su propio archivo dentro de views/, para que podamos
 trabajar en paralelo sin pisarnos.
@@ -27,7 +32,7 @@ ubicacion.selector_sidebar()
 # El orden define el orden de las pestanas. La primera es la principal.
 PESTANAS = [
     ("🚨 Alertar animal", alertar),
-    ("📍 Especies invasoras en tu area", cerca),
+    ("📍 Registros en tu area", cerca),
     ("📖 Catalogo de especies", catalogo),
     ("🗂️ Mis reportes", reportes),
     ("ℹ️ Acerca del proyecto", acerca),
@@ -38,5 +43,5 @@ for pestana, (_, vista) in zip(st.tabs([t for t, _ in PESTANAS]), PESTANAS):
         vista.render()
 
 st.divider()
-st.caption("Proyecto Innovacien · version base en construccion · "
-           "datos de ejemplo y modelo simulado")
+st.caption("Proyecto Innovacien · modelo YOLO11 entrenado · "
+           "avistamientos reales de GBIF (jabali, liebre europea y rata gris)")

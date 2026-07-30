@@ -1,7 +1,14 @@
 """Carga y consulta de datos: catalogo de especies, avistamientos y reportes.
 
-Los CSV de data/ son DATOS DE EJEMPLO para poder maquetar la app.
-TODO (equipo): reemplazar por los datos reales / base de datos definitiva.
+Los CSV de data/ son DATOS REALES descargados de GBIF por core/ingesta.py, y
+cubren unicamente las tres especies que el modelo sabe reconocer:
+jabali, liebre europea y rata gris.
+
+  - especies.csv       las tres fichas del catalogo
+  - avistamientos.csv  registros historicos de GBIF + los que envia la app
+  - reportes.csv       lo que reporta la persona desde la app (solo local)
+
+Para regenerarlos:  python -m core.ingesta
 """
 
 from __future__ import annotations
@@ -10,6 +17,7 @@ import math
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -21,8 +29,13 @@ CSV_ESPECIES = DIR_DATOS / "especies.csv"
 CSV_AVISTAMIENTOS = DIR_DATOS / "avistamientos.csv"
 CSV_REPORTES = DIR_DATOS / "reportes.csv"
 
-TIPOS = ["Animal", "Insecto", "Planta"]
+# Las tres especies del proyecto son mamiferos, asi que 'tipo' ya no discrimina
+# nada y dejamos de ofrecerlo como filtro. Lo que si distingue a estas tres es
+# donde aparecen: la rata gris es urbana, el jabali y la liebre son rurales.
+TIPOS = ["Animal"]
 NIVELES_RIESGO = ["Alto", "Medio", "Bajo"]
+ENTORNOS = ["Urbano", "Rural"]
+ESTADOS = ["Confirmado", "En revision"]
 
 # Punto de referencia por region, para centrar el mapa mientras no tengamos
 # geolocalizacion del navegador.
@@ -166,13 +179,28 @@ def distancia_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * r * math.asin(math.sqrt(a))
 
 
+def distancias_km(lat: float, lon: float, lats, lons):
+    """Haversine vectorizado: distancia de un punto a un array de coordenadas.
+
+    Con ~49.000 avistamientos, calcular esto fila por fila con df.apply tomaba
+    segundos en cada interaccion de la app. En numpy es una sola operacion.
+    """
+    r = 6371.0
+    lat1, lon1 = math.radians(lat), math.radians(lon)
+    lat2, lon2 = np.radians(np.asarray(lats, dtype=float)), np.radians(np.asarray(lons, dtype=float))
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    a = (np.sin(dlat / 2) ** 2
+         + math.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2)
+    return 2 * r * np.arcsin(np.sqrt(a))
+
+
 def avistamientos_cerca(lat: float, lon: float, radio_km: float = 150.0) -> pd.DataFrame:
     """Avistamientos dentro de un radio, ordenados del mas cercano al mas lejano."""
-    df = cargar_avistamientos().copy()
-    df["distancia_km"] = df.apply(
-        lambda f: distancia_km(lat, lon, f["lat"], f["lon"]), axis=1
-    ).round(1)
-    return df[df["distancia_km"] <= radio_km].sort_values("distancia_km").reset_index(drop=True)
+    df = cargar_avistamientos()
+    d = distancias_km(lat, lon, df["lat"].to_numpy(), df["lon"].to_numpy())
+    cerca = df.loc[d <= radio_km].copy()
+    cerca["distancia_km"] = d[d <= radio_km].round(1)
+    return cerca.sort_values("distancia_km").reset_index(drop=True)
 
 
 def especie_por_nombre(nombre: str) -> dict | None:
