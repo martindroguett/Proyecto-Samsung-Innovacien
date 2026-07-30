@@ -8,7 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from core import datos
-from core.theme import ESPECIE_COLOR, tag_riesgo, tag_sanitaria
+from core.theme import ESPECIE_COLOR, tag_enfermedad, tag_impacto
 
 RAIZ = Path(__file__).resolve().parent.parent
 CSV_RESUMEN = RAIZ / "data" / "procesado" / "resumen_especie.csv"
@@ -55,22 +55,29 @@ def _ficha(f: pd.Series, resumen: pd.DataFrame, fotos: pd.DataFrame) -> None:
         col_img, col_txt = st.columns([1, 2], gap="large")
 
         with col_img:
-            url = f.get("imagen_url")
-            if pd.notna(url) and url:
+            # Cadena de prioridad: foto propia del equipo, luego la de GBIF del
+            # catalogo, luego Wikipedia. La resuelve core.datos.
+            url = datos.imagen_especie(
+                f["nombre_comun"], f.get("nombre_cientifico", ""), f.get("imagen_url"))
+            if url:
                 st.image(str(url), width="stretch")
-                st.caption("Foto real de GBIF, tomada en Chile.")
+                if datos.imagen_especie_local(f["nombre_comun"]):
+                    st.caption("Foto propia del equipo.")
+                else:
+                    st.caption("Foto real de GBIF, tomada en Chile.")
             else:
-                st.info("Sin foto disponible con licencia libre.")
+                st.info("Sin foto disponible.")
 
         with col_txt:
             es_vector = str(f.get("portador_enfermedades", "")).strip().lower() in ["si", "sí", "true", "1"]
-            tag_vect = f" &nbsp;{tag_sanitaria()}" if es_vector else ""
+            tag_vect = f" &nbsp;{tag_enfermedad()}" if es_vector else ""
 
             st.markdown(
                 f'<h4 style="margin:0"><span style="color:{color}">●</span> '
                 f'{f["nombre_comun"]}</h4>', unsafe_allow_html=True)
             st.markdown(f'*{f["nombre_cientifico"]}* &nbsp;|&nbsp; '
-                        f'{tag_riesgo(f["riesgo"])}{tag_vect}', unsafe_allow_html=True)
+                        f'{tag_impacto(f["impacto_ambiental"])}{tag_vect}',
+                        unsafe_allow_html=True)
             st.write(f["descripcion"])
             st.caption(f"🏛️ Avisar a **{f['autoridad']}**")
 

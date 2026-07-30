@@ -13,27 +13,40 @@ Para regenerarlos:  python -m core.ingesta
 
 from __future__ import annotations
 
+import base64
 import math
+import mimetypes
+import re
+import unicodedata
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import requests
 import streamlit as st
 
 RAIZ = Path(__file__).resolve().parent.parent
 DIR_DATOS = RAIZ / "data"
 DIR_SUBIDAS = DIR_DATOS / "subidas"
+DIR_IMAGENES = DIR_DATOS / "imagenes"
 
 CSV_ESPECIES = DIR_DATOS / "especies.csv"
 CSV_AVISTAMIENTOS = DIR_DATOS / "avistamientos.csv"
 CSV_REPORTES = DIR_DATOS / "reportes.csv"
 
+# Si es False, nunca se consulta Wikipedia: solo se muestran fotos propias de
+# data/imagenes/<especie>/ o la del catalogo (GBIF).
+USAR_WIKIPEDIA_COMO_RESPALDO = True
+
+EXTENSIONES_IMAGEN = (".jpg", ".jpeg", ".png", ".webp")
+
 # Las tres especies del proyecto son mamiferos, asi que 'tipo' ya no discrimina
 # nada y dejamos de ofrecerlo como filtro. Lo que si distingue a estas tres es
 # donde aparecen: la rata gris es urbana, el jabali y la liebre son rurales.
 TIPOS = ["Animal"]
-NIVELES_RIESGO = ["Alto", "Medio", "Bajo"]
+NIVELES_IMPACTO = ["Alto", "Medio", "Bajo"]
 ENTORNOS = ["Urbano", "Rural"]
 ESTADOS = ["Confirmado", "En revision"]
 
@@ -79,12 +92,26 @@ def cargar_avistamientos() -> pd.DataFrame:
 
 def cargar_reportes() -> pd.DataFrame:
     """Reportes enviados desde la app. Vacio si aun no hay ninguno."""
-    columnas = ["ticket", "fecha_hora", "especie", "confianza", "tipo", "riesgo",
-                "region", "comuna", "lat", "lon", "autoridad", "estado",
-                "contacto", "comentario", "imagen"]
+    columnas = ["ticket", "fecha_hora", "especie", "confianza", "tipo",
+                "impacto_ambiental", "region", "comuna", "lat", "lon",
+                "autoridad", "estado", "contacto", "comentario", "imagen"]
     if not CSV_REPORTES.exists():
         return pd.DataFrame(columns=columnas)
-    return pd.read_csv(CSV_REPORTES)
+
+    df = pd.read_csv(CSV_REPORTES)
+
+    # Los reportes guardados antes del renombre traen la columna 'riesgo'. Se
+    # migran al leer para que un CSV viejo —el de cualquier integrante del
+    # equipo— no rompa la pestana de reportes.
+    if "riesgo" in df.columns and "impacto_ambiental" not in df.columns:
+        df = df.rename(columns={"riesgo": "impacto_ambiental"})
+
+    # Si falta alguna columna esperada, se agrega vacia en vez de explotar.
+    for col in columnas:
+        if col not in df.columns:
+            df[col] = pd.NA
+
+    return df
 
 
 # --------------------------------------------------------------------------
@@ -112,10 +139,12 @@ def guardar_reporte(reporte: dict) -> None:
 
 
 def guardar_avistamiento(especie_nombre_o_id: str | int, region: str, comuna: str,
-                        lat: float, lon: float, fecha: str = "", estado: str = "En revision") -> dict:
-    """Agrega un nuevo registro a data/avistamientos.csv y refresca la cache de Streamlit."""
+                         lat: float, lon: float, fecha: str = "",
+                         estado: str = "En revision") -> dict:
+    """Agrega un nuevo registro a data/avistamientos.csv y refresca la cache."""
     especie_id = None
-    if isinstance(especie_nombre_o_id, int) or (isinstance(especie_nombre_o_id, str) and especie_nombre_o_id.isdigit()):
+    if isinstance(especie_nombre_o_id, int) or (
+            isinstance(especie_nombre_o_id, str) and especie_nombre_o_id.isdigit()):
         especie_id = int(especie_nombre_o_id)
     else:
         info = especie_por_nombre(str(especie_nombre_o_id))
@@ -128,29 +157,35 @@ def guardar_avistamiento(especie_nombre_o_id: str | int, region: str, comuna: st
     if not fecha:
         fecha = datetime.now().strftime("%Y-%m-%d")
 
-    # Obtener el siguiente ID unico
     if CSV_AVISTAMIENTOS.exists():
         df_existente = pd.read_csv(CSV_AVISTAMIENTOS)
         nuevo_id = int(df_existente["id"].max() + 1) if not df_existente.empty else 1
     else:
         nuevo_id = 1
 
+    # Las columnas deben calzar con las que escribe core.ingesta.publicar_para_app,
+    # o el CSV queda desalineado al concatenar en modo 'append'.
     nuevo_avistamiento = {
         "id": nuevo_id,
         "especie_id": especie_id,
         "region": region,
         "comuna": comuna,
-        "lat": round(lat, 4),
-        "lon": round(lon, 4),
+        "lat": round(lat, 5),
+        "lon": round(lon, 5),
         "fecha": fecha,
         "estado": estado,
+        "entorno": "Rural",
+        "zona_urbana": "",
+        "fuente": "Reporte ciudadano (app)",
+        "gbif_id": "",
+        "origen": "App",
     }
 
     df = pd.DataFrame([nuevo_avistamiento])
     existe = CSV_AVISTAMIENTOS.exists()
     df.to_csv(CSV_AVISTAMIENTOS, mode="a", header=not existe, index=False)
 
-    # Invalida el cache para que el mapa y los componentes de Streamlit muestren los nuevos datos de inmediato
+    # Invalida el cache para que el mapa muestre el nuevo registro de inmediato
     cargar_avistamientos.clear()
 
     return nuevo_avistamiento
@@ -164,6 +199,85 @@ def guardar_imagen(archivo, prefijo: str = "obs") -> str:
     destino = DIR_SUBIDAS / nombre
     destino.write_bytes(archivo.getvalue())
     return str(destino.relative_to(RAIZ))
+
+
+# --------------------------------------------------------------------------
+# Fotos de las especies
+# --------------------------------------------------------------------------
+def _normalizar(texto: str) -> str:
+    """'Rata gris' -> 'ratagris', para comparar nombres de carpeta sin
+    preocuparse de tildes, mayusculas, espacios o guiones."""
+    sin_tildes = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]", "", sin_tildes.lower())
+
+
+def _archivo_a_data_uri(ruta: Path) -> str:
+    """Convierte un archivo local a data URI, para usarlo en un <img src=...>."""
+    mime = mimetypes.guess_type(ruta.name)[0] or "image/jpeg"
+    b64 = base64.b64encode(ruta.read_bytes()).decode()
+    return f"data:{mime};base64,{b64}"
+
+
+@st.cache_data(show_spinner=False)
+def imagen_especie_local(nombre_comun: str) -> str | None:
+    """Busca la primera foto en data/imagenes/<nombre_comun>/ como data URI.
+
+    El nombre de la carpeta no necesita coincidir exactamente: 'Rata gris',
+    'rata_gris' y 'rata-gris' apuntan a la misma carpeta.
+    """
+    if not DIR_IMAGENES.exists():
+        return None
+
+    objetivo = _normalizar(nombre_comun)
+    for carpeta in sorted(DIR_IMAGENES.iterdir()):
+        if carpeta.is_dir() and _normalizar(carpeta.name) == objetivo:
+            for archivo in sorted(carpeta.iterdir()):
+                if archivo.suffix.lower() in EXTENSIONES_IMAGEN:
+                    return _archivo_a_data_uri(archivo)
+    return None
+
+
+@st.cache_data(show_spinner=False)
+def imagen_especie_wikipedia(nombre_cientifico: str) -> str | None:
+    """Busca una foto de la especie por su nombre cientifico en Wikipedia.
+
+    Ultimo respaldo, cuando no hay foto propia ni foto del catalogo.
+    """
+    try:
+        url = ("https://es.wikipedia.org/api/rest_v1/page/summary/"
+               + urllib.parse.quote(nombre_cientifico))
+        r = requests.get(url, timeout=5, headers={"accept": "application/json"})
+        if r.ok:
+            data = r.json()
+            imagen = data.get("originalimage") or data.get("thumbnail") or {}
+            return imagen.get("source")
+    except Exception:
+        pass
+    return None
+
+
+def imagen_especie(nombre_comun: str, nombre_cientifico: str = "",
+                   imagen_url: str | None = None) -> str | None:
+    """Foto para mostrar en la ficha de una especie.
+
+    Prioridad:
+      1. data/imagenes/<nombre_comun>/  fotos propias del equipo, mandan siempre.
+      2. imagen_url del catalogo        foto real de GBIF tomada en Chile, con la
+                                        licencia ya verificada por el pipeline.
+      3. Wikipedia                     respaldo, si esta habilitado.
+      4. None                          la ficha muestra un placeholder.
+    """
+    local = imagen_especie_local(nombre_comun)
+    if local:
+        return local
+
+    if imagen_url is not None and pd.notna(imagen_url) and str(imagen_url).strip():
+        return str(imagen_url)
+
+    if USAR_WIKIPEDIA_COMO_RESPALDO and nombre_cientifico:
+        return imagen_especie_wikipedia(nombre_cientifico)
+
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -187,7 +301,8 @@ def distancias_km(lat: float, lon: float, lats, lons):
     """
     r = 6371.0
     lat1, lon1 = math.radians(lat), math.radians(lon)
-    lat2, lon2 = np.radians(np.asarray(lats, dtype=float)), np.radians(np.asarray(lons, dtype=float))
+    lat2 = np.radians(np.asarray(lats, dtype=float))
+    lon2 = np.radians(np.asarray(lons, dtype=float))
     dlat, dlon = lat2 - lat1, lon2 - lon1
     a = (np.sin(dlat / 2) ** 2
          + math.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2)

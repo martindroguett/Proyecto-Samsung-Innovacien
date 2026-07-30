@@ -99,8 +99,10 @@ aciertos**. Los dos fallos son informativos y motivaron los umbrales adaptativos
 3. **📖 Catálogo de especies:**
    - Las tres fichas con **fotografías reales de GBIF tomadas en Chile** (licencia CC0 en las tres
      portadas) y métricas de cada especie calculadas por el pipeline.
-   - Distintivo de riesgo sanitario **`☣️ Portador de enfermedades`** para vectores biológicos
-     (jabalí y rata gris).
+   - Etiqueta de **impacto ambiental** (alto/medio/bajo) e insignia
+     **`🦠 Portadora de enfermedades`** para vectores biológicos (jabalí y rata gris).
+   - Las fotos se resuelven por prioridad: foto propia en `data/imagenes/<especie>/`,
+     luego la de GBIF del catálogo, luego Wikipedia como respaldo.
 
 4. **🗂️ Mis reportes:** historial ciudadano de alertas y tickets generados.
 
@@ -227,6 +229,7 @@ Ambos están ejecutados, con salidas y gráficos incluidos. Versiones HTML en
 | 7 | **98% de los datos son cámaras trampa de CONAF en áreas protegidas** | **`fuente` como dimensión de primera clase; todo resultado desagregado** |
 | 8 | Desbalance de 198:1 entre liebre y rata gris | Escala logarítmica y `n=` visible en cada barra; nunca se comparan volúmenes absolutos |
 | 9 | Territorio insular distorsionaría el análisis latitudinal | Marcado en `territorio` (resultó ser 1 solo registro) |
+| 11 | `riesgo` se confundía con riesgo sanitario | Renombrado a `impacto_ambiental`; el riesgo sanitario queda en su propia insignia |
 | 10 | La paleta natural de la marca falla como código de categorías | Paleta de especie verificada para contraste y daltonismo; la marca viste la UI, los datos usan colores validados |
 
 ### Limitaciones declaradas
@@ -338,9 +341,10 @@ packages.txt                 # Librerías de sistema para Streamlit Cloud (libgl
 - [x] Catálogo con **fotografías reales de GBIF** e insignias de portador de enfermedades.
 - [x] Sincronización automática de alertas con la base de avistamientos (`core/datos.py`).
 - [x] **Re-enfoque a tres especies:** pipeline GBIF sin GRIIS, notebooks y datos regenerados.
+- [x] Rama `catalogo` integrada: **riesgo → impacto ambiental**, fotos propias por especie
+      con respaldo de Wikipedia, y tarjetas de altura uniforme.
 - [ ] Publicar en Streamlit Cloud y agregar la URL oficial al README.
 - [ ] Evaluar el modelo con un set de prueba independiente y reportar métricas **por clase**.
 - [ ] Ampliar el set de entrenamiento, sobre todo de rata gris (la clase más débil).
 - [ ] Confirmar los canales oficiales de aviso con SAG.
-- [ ] Integrar la rama `catalogo` (renombre riesgo → impacto ambiental), aún sin mergear.
 - [ ] Decidir si `data/crudo/` (18 MB de caché regenerable) debe ir al repositorio.

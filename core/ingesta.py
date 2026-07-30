@@ -70,7 +70,7 @@ ESPECIES_OBJETIVO: dict[str, dict] = {
         "nombre_comun": "Jabali",
         "nombre_cientifico": "Sus scrofa",
         "tipo": "Animal",
-        "riesgo": "Alto",
+        "impacto_ambiental": "Alto",
         "autoridad": "SAG",
         "portador_enfermedades": "Si",
         "descripcion": ("Suido silvestre que remueve el suelo del bosque nativo y "
@@ -82,7 +82,7 @@ ESPECIES_OBJETIVO: dict[str, dict] = {
         "nombre_comun": "Liebre europea",
         "nombre_cientifico": "Lepus europaeus",
         "tipo": "Animal",
-        "riesgo": "Medio",
+        "impacto_ambiental": "Medio",
         "autoridad": "SAG",
         "portador_enfermedades": "No",
         "descripcion": ("Mamifero herbivoro de orejas largas introducido desde Europa. "
@@ -94,7 +94,7 @@ ESPECIES_OBJETIVO: dict[str, dict] = {
         "nombre_comun": "Rata gris",
         "nombre_cientifico": "Rattus norvegicus",
         "tipo": "Animal",
-        "riesgo": "Alto",
+        "impacto_ambiental": "Alto",
         "autoridad": "SAG",
         "portador_enfermedades": "Si",
         "descripcion": ("Roedor invasor urbano y rural que depreda nidos de aves nativas "
@@ -583,7 +583,7 @@ def publicar_para_app(ocurrencias: pd.DataFrame | None = None,
         ocurrencias = pd.read_csv(DIR_PROC / "ocurrencias.csv", low_memory=False)
 
     esp = tabla_especies()
-    esp_app = esp[["id", "nombre_comun", "nombre_cientifico", "tipo", "riesgo",
+    esp_app = esp[["id", "nombre_comun", "nombre_cientifico", "tipo", "impacto_ambiental",
                    "autoridad", "descripcion", "portador_enfermedades"]].copy()
 
     # Foto de portada: la primera con mejor licencia de cada especie.
@@ -591,7 +591,7 @@ def publicar_para_app(ocurrencias: pd.DataFrame | None = None,
     portada = (fotos.groupby("clase_modelo").first()["foto_url"]
                .rename("imagen_url").reset_index())
     esp_app = (esp.merge(portada, on="clase_modelo", how="left")
-               [["id", "nombre_comun", "nombre_cientifico", "tipo", "riesgo",
+               [["id", "nombre_comun", "nombre_cientifico", "tipo", "impacto_ambiental",
                  "autoridad", "descripcion", "imagen_url", "portador_enfermedades"]])
     esp_app.to_csv(DIR_DATOS / "especies.csv", index=False)
     log(f"     especies.csv        ({len(esp_app)} filas)")

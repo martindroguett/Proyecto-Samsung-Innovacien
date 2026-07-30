@@ -37,7 +37,8 @@ exactamente lo que el modelo puede identificar.
         st.markdown("##### Especies del proyecto")
         for info in sorted(ESPECIES_OBJETIVO.values(), key=lambda i: i["id"]):
             st.write(f"- **{info['nombre_comun']}** — *{info['nombre_cientifico']}* "
-                     f"(riesgo {info['riesgo'].lower()}, avisa a {info['autoridad']})")
+                     f"(impacto {info['impacto_ambiental'].lower()}, "
+                     f"avisa a {info['autoridad']})")
         st.caption("Las tres clases que reconoce el modelo, y el alcance completo "
                    "del catalogo y del analisis.")
 

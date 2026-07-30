@@ -53,7 +53,7 @@ class Prediccion:
     confianza: float
     es_invasora: bool
     tipo: str = "Desconocido"
-    riesgo: str = "Bajo"
+    impacto_ambiental: str = "Bajo"
     autoridad: str = "SAG"
     descripcion: str = ""
     alternativas: list[tuple[str, float]] = field(default_factory=list)
@@ -90,7 +90,7 @@ def clasificar(imagen_bytes: bytes) -> Prediccion:
                 confianza=0.0,
                 es_invasora=False,
                 tipo="Desconocido",
-                riesgo="Bajo",
+                impacto_ambiental="Bajo",
                 descripcion="No se detectó ninguna especie invasora conocida en la imagen.",
                 simulado=False,
             )
@@ -116,7 +116,7 @@ def clasificar(imagen_bytes: bytes) -> Prediccion:
                 confianza=round(confianza, 3),
                 es_invasora=False,
                 tipo="Desconocido",
-                riesgo="Bajo",
+                impacto_ambiental="Bajo",
                 descripcion="La imagen no coincide con las especies invasoras del modelo (Jabalí, Liebre europea o Rata gris).",
                 alternativas=alternativas,
                 simulado=False,
@@ -133,7 +133,7 @@ def clasificar(imagen_bytes: bytes) -> Prediccion:
                 confianza=round(confianza, 3),
                 es_invasora=False,
                 tipo="Desconocido",
-                riesgo="Bajo",
+                impacto_ambiental="Bajo",
                 descripcion=f"Se detectó una posible coincidencia con '{nombre_comun}' al {confianza*100:.1f}%, pero requiere un mínimo del {umbral_requerido*100:.0f}% de certeza para confirmar. Te sugerimos tomar una foto más cercana o nítida.",
                 alternativas=alternativas,
                 simulado=False,
@@ -149,7 +149,7 @@ def clasificar(imagen_bytes: bytes) -> Prediccion:
                 confianza=round(confianza, 3),
                 es_invasora=True,
                 tipo="Animal",
-                riesgo="Alto",
+                impacto_ambiental="Alto",
                 autoridad="SAG",
                 alternativas=alternativas,
                 simulado=False,
@@ -161,7 +161,7 @@ def clasificar(imagen_bytes: bytes) -> Prediccion:
             confianza=round(confianza, 3),
             es_invasora=True,
             tipo=f.get("tipo", "Animal"),
-            riesgo=f.get("riesgo", "Alto"),
+            impacto_ambiental=f.get("impacto_ambiental", "Alto"),
             autoridad=f.get("autoridad", "SAG"),
             descripcion=f.get("descripcion", ""),
             alternativas=alternativas,

@@ -6,7 +6,7 @@ import streamlit as st
 
 from core import autoridades, datos, modelo, ubicacion
 from core.comunas import obtener_comunas, obtener_coordenadas
-from core.theme import pendiente, tag_riesgo
+from core.theme import pendiente, tag_impacto
 
 
 def render() -> None:
@@ -60,7 +60,7 @@ def _seccion_resultado() -> None:
 
     pred = st.session_state.get("alerta_prediccion")
     if pred is None:
-        pendiente("aqui aparece la especie detectada, su nivel de riesgo y el "
+        pendiente("aqui aparece la especie detectada, su impacto ambiental y el "
                   "formulario de aviso. Sube una foto y presiona «Identificar especie».")
         return
 
@@ -75,14 +75,14 @@ def _seccion_resultado() -> None:
     c1, c2, c3 = st.columns(3)
     c1.metric("Confianza", f"{pred.confianza * 100:.1f}%")
     c2.metric("Tipo", pred.tipo)
-    c3.metric("Riesgo", pred.riesgo)
+    c3.metric("Impacto ambiental", pred.impacto_ambiental)
 
     if not pred.es_invasora and pred.confianza > 0:
         st.caption("ℹ️ El modelo requiere fotos cercanas para validar la detección con certeza.")
 
     if pred.descripcion:
         if pred.es_invasora:
-            st.markdown(tag_riesgo(pred.riesgo), unsafe_allow_html=True)
+            st.markdown(tag_impacto(pred.impacto_ambiental), unsafe_allow_html=True)
         st.write(pred.descripcion)
 
     if pred.alternativas:

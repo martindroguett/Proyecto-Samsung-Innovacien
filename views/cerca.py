@@ -7,7 +7,7 @@ import pydeck as pdk
 import streamlit as st
 
 from core import datos, ubicacion
-from core.theme import ESPECIE_COLOR, ESPECIE_RGB, ficha_especie, pendiente
+from core.theme import ESPECIE_COLOR, ESPECIE_RGB, ficha_especie
 
 # Con ~49.000 registros reales el circulo de 8 km por avistamiento que usaba el
 # prototipo tapaba el mapa entero. Cada registro es una observacion puntual, no
@@ -121,8 +121,9 @@ def _mapa(cerca: pd.DataFrame, lat_centro: float, lon_centro: float) -> None:
                 "region", "estado", "entorno", "fuente"]].copy()
     df["fecha_txt"] = cerca["fecha"].dt.strftime("%d-%m-%Y")
 
-    # El color codifica la especie, no el riesgo: con solo tres especies la
-    # identidad es la pregunta interesante, y el riesgo ya sale en las fichas.
+    # El color codifica la especie, no el impacto ambiental: con solo tres
+    # especies la identidad es la pregunta interesante, y el impacto ya sale
+    # etiquetado en las fichas.
     df["color"] = df["nombre_comun"].map(
         lambda n: ESPECIE_RGB.get(n, [138, 138, 130]) + [170])
 
@@ -184,9 +185,13 @@ def _lista(cerca: pd.DataFrame) -> None:
         detalle = (f"A {f['distancia_km']:.0f} km · {f['comuna']}, {f['region']} · "
                    f"visto el {f['fecha']:%d-%m-%Y} · {f['entorno'].lower()}")
         es_vector = str(f.get("portador_enfermedades", "")).strip().lower() in ["si", "sí", "true", "1"]
+        # La ficha muestra un placeholder si no recibe foto, asi que le pasamos la
+        # misma que usa el catalogo (esta cacheada: son solo tres especies).
+        foto = datos.imagen_especie(f["nombre_comun"], f.get("nombre_cientifico", ""),
+                                    f.get("imagen_url"))
         st.markdown(
-            ficha_especie(f["nombre_comun"], f["nombre_cientifico"], f["riesgo"],
-                          detalle, es_vector=es_vector),
+            ficha_especie(f["nombre_comun"], f["nombre_cientifico"], f["impacto_ambiental"],
+                          detalle, imagen_url=foto, portador_enfermedades=es_vector),
             unsafe_allow_html=True,
         )
 

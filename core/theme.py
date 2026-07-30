@@ -12,20 +12,25 @@ CORTEZA = "#5C4A38"
 TERRACOTA = "#B4622F"
 TEXTO = "#2B2B26"
 
-# Colores por nivel de riesgo (se usan en las fichas y etiquetas)
-RIESGO_COLOR = {
+# Colores por nivel de impacto ambiental (se usan en el mapa y en las fichas)
+IMPACTO_COLOR = {
     "Alto": "#B4622F",     # terracota
     "Medio": "#C9A227",    # ocre
     "Bajo": "#4A7C59",     # verde
 }
 
-# Identidad de especie para las visualizaciones (mapa y graficos).
+# Color de la etiqueta de especie portadora de enfermedades
+ENFERMEDAD_COLOR = "#8E3B46"  # burdeo, para distinguirla del impacto ambiental
+
+# Identidad de especie para las visualizaciones (mapa y graficos del analisis).
 #
-# La paleta natural de la marca (verdes y terracotas) no sirve para codificar
-# categorias: sus verdes apagados quedan bajo el piso de croma —se leen como
-# gris— y el par naranja/verde es justamente el que la daltonia rojo-verde
-# vuelve indistinguible. Estos tres hues pasan los seis checks de contraste y
-# separacion CVD en modo claro y oscuro, en todos los pares.
+# Los colores de arriba codifican un nivel ordenado (impacto bajo -> alto) y por
+# eso funcionan como escala. Para distinguir ESPECIES hace falta otra cosa: hues
+# categoricos. La paleta natural de la marca no sirve ahi —sus verdes apagados
+# caen bajo el piso de croma y se leen como gris, y el par naranja/verde es el
+# que la daltonia rojo-verde vuelve indistinguible—. Estos tres pasan las
+# verificaciones de contraste y de separacion CVD en modo claro y oscuro, en
+# todos los pares.
 #
 # La marca sigue vistiendo la interfaz; los datos usan colores verificados.
 ESPECIE_COLOR = {
@@ -74,15 +79,67 @@ _CSS = f"""
       border-radius: 12px;
       padding: 0.9rem 1.1rem;
       margin-bottom: 0.7rem;
+      overflow: hidden;
+      height: 480px;
+      display: flex;
+      flex-direction: column;
   }}
-  .inv-card h4 {{ margin: 0 0 0.2rem 0; color: {VERDE_OSCURO}; }}
-  .inv-card .sci {{ font-style: italic; color: {CORTEZA}; font-size: 0.88rem; }}
-  .inv-card p {{ margin: 0.4rem 0 0 0; font-size: 0.9rem; color: {TEXTO}; }}
+  .inv-card h4 {{
+      margin: 0 0 0.2rem 0;
+      color: {VERDE_OSCURO};
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+  }}
+  .inv-card .sci {{
+      font-style: italic;
+      color: {CORTEZA};
+      font-size: 0.88rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+  }}
+  .inv-card p {{
+      margin: 0.4rem 0 0 0;
+      font-size: 0.9rem;
+      color: {TEXTO};
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      flex: 1;
+  }}
+  .inv-card .tags {{ display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.3rem; flex-shrink: 0; }}
 
-  /* ---- Etiquetas ---- */
+  /* ---- Foto de la especie ---- */
+  .inv-foto {{
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      display: block;
+      flex-shrink: 0;
+  }}
+  .inv-foto-placeholder {{
+      width: 100%;
+      height: 260px;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      flex-shrink: 0;
+      background: {ARENA};
+      color: {CORTEZA};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+  }}
+
+  /* ---- Etiquetas (impacto ambiental / portador de enfermedades) ---- */
   .inv-tag {{
       display: inline-block;
-      padding: 0.15rem 0.6rem;
+      padding: 0.12rem 0.6rem;
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 600;
@@ -128,24 +185,36 @@ def encabezado(titulo: str = "Proyecto Innovacien",
     )
 
 
-def tag_riesgo(nivel: str) -> str:
-    """Devuelve el HTML de una etiqueta de riesgo."""
-    color = RIESGO_COLOR.get(nivel, VERDE)
-    return f'<span class="inv-tag" style="background:{color}">Riesgo {nivel.lower()}</span>'
+def tag_impacto(nivel: str) -> str:
+    """Devuelve el HTML de una etiqueta de impacto ambiental."""
+    color = IMPACTO_COLOR.get(nivel, VERDE)
+    return f'<span class="inv-tag" style="background:{color}">Impacto {nivel.lower()}</span>'
 
 
-def tag_sanitaria() -> str:
-    """Devuelve el HTML de la etiqueta de portador de enfermedades."""
-    return '<span class="inv-tag" style="background:#A71D2A;">☣️ Portador de enfermedades</span>'
+def tag_enfermedad() -> str:
+    """Devuelve el HTML de la etiqueta de especie portadora de enfermedades."""
+    return f'<span class="inv-tag" style="background:{ENFERMEDAD_COLOR}">🦠 Portadora de enfermedades</span>'
 
 
-def ficha_especie(nombre: str, cientifico: str, riesgo: str, detalle: str = "", es_vector: bool = False) -> str:
-    """Devuelve el HTML de una ficha de especie."""
-    color = RIESGO_COLOR.get(riesgo, VERDE)
-    vector_html = f" &nbsp;{tag_sanitaria()}" if es_vector else ""
+def ficha_especie(nombre: str, cientifico: str, impacto_ambiental: str, detalle: str = "",
+                  imagen_url: str | None = None, portador_enfermedades: bool = False) -> str:
+    """Devuelve el HTML de una ficha de especie, con foto y etiquetas."""
+    color = IMPACTO_COLOR.get(impacto_ambiental, VERDE)
+
+    if imagen_url:
+        foto_html = f'<img class="inv-foto" src="{imagen_url}" alt="{nombre}">'
+    else:
+        foto_html = '<div class="inv-foto-placeholder">📷 Sin foto disponible</div>'
+
+    tags = tag_impacto(impacto_ambiental)
+    if portador_enfermedades:
+        tags += tag_enfermedad()
+
     return f"""<div class="inv-card" style="border-left-color:{color}">
-                 <h4>{nombre} &nbsp;{tag_riesgo(riesgo)}{vector_html}</h4>
+                 {foto_html}
+                 <h4>{nombre}</h4>
                  <div class="sci">{cientifico}</div>
+                 <div class="tags">{tags}</div>
                  <p>{detalle}</p>
                </div>"""
 

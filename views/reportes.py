@@ -23,13 +23,13 @@ def render() -> None:
     c1, c2, c3 = st.columns(3)
     c1.metric("Reportes enviados", len(reportes))
     c2.metric("Especies distintas", reportes["especie"].nunique())
-    c3.metric("Riesgo alto", int((reportes["riesgo"] == "Alto").sum()))
+    c3.metric("Impacto alto", int((reportes["impacto_ambiental"] == "Alto").sum()))
 
     st.dataframe(
-        reportes[["ticket", "fecha_hora", "especie", "riesgo", "comuna",
+        reportes[["ticket", "fecha_hora", "especie", "impacto_ambiental", "comuna",
                   "region", "autoridad", "estado"]]
         .rename(columns={"ticket": "Ticket", "fecha_hora": "Fecha", "especie": "Especie",
-                         "riesgo": "Riesgo", "comuna": "Comuna", "region": "Region",
+                         "impacto_ambiental": "Impacto ambiental", "comuna": "Comuna", "region": "Region",
                          "autoridad": "Autoridad", "estado": "Estado"}),
         hide_index=True, width="stretch",
     )
