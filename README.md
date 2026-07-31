@@ -12,6 +12,8 @@ La aplicación permite la identificación de una especie invasora a partir de un
 
 En su fase inicial, la aplicación es capaz de diferenciar las especies de jabalí, liebre europea y rata gris. Se espera poder escalarla a identificar todos los animales catalogados como invasores.
 
+Puedes probar la aplicación directamente en el siguiente enlace: [Flora&Fauna Alerta](https://proyecto-samsung-innovacien-hl2shwgvd8d6kold6yzbtb.streamlit.app)
+
 ## Integrantes
 <table>
   <tr>
