@@ -34,10 +34,10 @@ UMBRALES_POR_ESPECIE: dict[str, float] = {
 UMBRAL_DEFAULT = 0.50
 UMBRAL_CONFIANZA = 0.45  # Compatibilidad
 
-# Los umbrales de arriba estan indexados por la ETIQUETA del modelo ('liebre'),
-# pero Prediccion.especie guarda el NOMBRE COMUN ('Liebre europea'), asi que
+# Los umbrales de arriba están indexados por la ETIQUETA del modelo ('liebre'),
+# pero Prediccion.especie guarda el NOMBRE COMUN ('Liebre europea'), así que
 # buscar el umbral con el nombre comun no encontraba la clave y caia al valor por
-# defecto. Derivamos el indice por nombre comun del mismo mapa de etiquetas para
+# defecto. Derivamos el índice por nombre comun del mismo mapa de etiquetas para
 # no tener que mantener dos listas sincronizadas a mano.
 UMBRALES_POR_NOMBRE: dict[str, float] = {
     MAPA_ETIQUETAS[etiqueta]: umbral
@@ -125,7 +125,7 @@ def clasificar(imagen_bytes: bytes) -> Prediccion:
         nombre_comun = MAPA_ETIQUETAS[nombre_raw]
         umbral_requerido = UMBRALES_POR_ESPECIE.get(nombre_raw, UMBRAL_DEFAULT)
 
-        # 2. Si la confianza es inferior al umbral especifico de esa especie
+        # 2. Si la confianza es inferior al umbral específico de esa especie
         if confianza < umbral_requerido:
             alternativas.insert(0, (f"{nombre_comun} (coincidencia parcial)", round(confianza, 3)))
             return Prediccion(
@@ -171,7 +171,7 @@ def clasificar(imagen_bytes: bytes) -> Prediccion:
     except Exception as e:
         st.error(f"Error en la inferencia del modelo: {e}")
         return Prediccion(
-            especie="Error de deteccion",
+            especie="Error de detección",
             confianza=0.0,
             es_invasora=False,
             descripcion=str(e),

@@ -1,25 +1,16 @@
-"""Obtencion y limpieza de los datos del proyecto desde GBIF.
+"""Obtención y limpieza de los datos del proyecto desde GBIF.
 
-FUENTE UNICA: GBIF — Global Biodiversity Information Facility (api.gbif.org).
+FUENTE ÚNICA: GBIF — Global Biodiversity Information Facility (api.gbif.org).
 Los registros chilenos provienen mayoritariamente de iNaturalist
 (Research-grade Observations, DOI 10.15468/ab3s5x) y de colecciones
-museologicas. Licencias CC0 / CC-BY / CC-BY-NC segun el registro.
+museológicas. Licencias CC0 / CC-BY / CC-BY-NC según el registro.
 
-POR QUE YA NO USAMOS GRIIS
---------------------------
-GRIIS Chile servia para *descubrir* cuales de las 844 especies exoticas del
-pais estan declaradas invasoras. Ese paso tenia sentido cuando la pregunta
-abarcaba todo el espectro de especies invasoras.
+El módulo trabaja sobre las tres especies que el modelo YOLO11 (core/best.pt)
+sabe reconocer, y solo sobre esas tres. Cada una se consulta por su speciesKey
+de GBIF, un identificador numérico estable: buscar por nombre científico
+obligaría a resolver sinónimos taxonómicos a mano.
 
-El proyecto ahora trabaja sobre las tres especies que el modelo YOLO11
-(core/best.pt) sabe reconocer, y solo sobre esas tres. Estan fijadas de
-antemano por el modelo, no hay nada que descubrir: ni el registro GRIIS ni el
-emparejamiento taxonomico por nombre aportan informacion al analisis.
-
-Trabajamos directo con el speciesKey de GBIF de cada especie, que es un
-identificador estable y evita por completo el problema de los sinonimos.
-
-QUE HACE ESTE MODULO
+QUÉ HACE ESTE MÓDULO
 --------------------
 1. Baja *todos* los registros chilenos con coordenada de las tres especies
    (~49.000). Al ser solo tres especies podemos permitirnos los registros
@@ -133,7 +124,7 @@ BBOX_CHILE = {"lat_min": -56.5, "lat_max": -17.4, "lon_min": -110.0, "lon_max": 
 # El dato mas importante de este conjunto: NO todos los registros se generaron
 # de la misma manera, y eso condiciona por completo donde aparecen.
 #
-#   Camara trampa (CONAF)  48.303 registros (98%), 2017-2023. Monitoreo en areas
+#   Camara trampa (CONAF)  48.303 registros (98%), 2017-2023. Monitoreo en áreas
 #       silvestres protegidas. Explica por si solo que el 96% del total sea
 #       rural: no hay camaras trampa en ciudades. No tiene NI UN registro de
 #       rata gris.
@@ -308,7 +299,7 @@ def limpiar(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df["territorio"] = np.where(df["lon"] >= LON_MIN_CONTINENTAL,
                                 "Continental", "Insular")
 
-    # Como se genero el registro. Determina donde puede aparecer, asi que se
+    # Como se genero el registro. Determina donde puede aparecer, así que se
     # calcula antes de cualquier agregacion territorial.
     df["fuente"] = clasificar_fuente(df)
 
@@ -326,7 +317,7 @@ def limpiar(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df["fecha"] = pd.to_datetime(iso, format="%Y-%m-%d", errors="coerce")
 
     # Los que traen solo año o año-mes no tienen dia y quedan sin fecha exacta;
-    # su 'anio' si sirve para la serie temporal, asi que se conservan marcados.
+    # su 'anio' si sirve para la serie temporal, así que se conservan marcados.
     df["tiene_fecha"] = df["fecha"].notna()
     bitacora.append({"paso": "sin fecha exacta (se marcan, no se descartan)",
                      "descartados": int((~df["tiene_fecha"]).sum()),
@@ -347,7 +338,7 @@ def asignar_comuna(df: pd.DataFrame) -> pd.DataFrame:
     la coordenada, que es el dato duro del registro.
 
     Limitacion declarada: usamos el centro de cada comuna, no su polionio real,
-    asi que un punto cerca del limite comunal puede caer en la vecina. Para el
+    así que un punto cerca del limite comunal puede caer en la vecina. Para el
     nivel de agregacion del analisis (region y zona urbana) el efecto es menor.
     """
     from core.comunas import COMUNAS_POR_REGION
@@ -369,7 +360,7 @@ def asignar_comuna(df: pd.DataFrame) -> pd.DataFrame:
 
     # La mediana de esta distancia es ~34 km: la mayoria de los registros son
     # rurales y caen lejos de cualquier centro comunal del diccionario. Sobre
-    # ese umbral la comuna asignada es una etiqueta debil, asi que la marcamos
+    # ese umbral la comuna asignada es una etiqueta debil, así que la marcamos
     # y el analisis se queda a nivel de region, que si es robusto.
     df["comuna_confiable"] = df["dist_centro_comunal_km"] <= 25
     return df
@@ -502,7 +493,7 @@ def fotos_libres(df: pd.DataFrame, por_especie: int = 12) -> pd.DataFrame:
     Priorizamos CC0 y CC-BY, que permiten reutilizacion sin restriccion de uso
     comercial; dejamos CC-BY-NC al final como respaldo.
     """
-    # GBIF entrega la licencia como URL completa, no como sigla, asi que la
+    # GBIF entrega la licencia como URL completa, no como sigla, así que la
     # prioridad se decide por subcadena: CC0 antes que CC-BY, y CC-BY-NC al final.
     con_foto = df[df["foto_url"].notna()].copy()
     lic = con_foto["license"].fillna("").astype(str)
@@ -574,7 +565,7 @@ def publicar_para_app(ocurrencias: pd.DataFrame | None = None,
                       verbose: bool = True) -> None:
     """Escribe data/especies.csv y data/avistamientos.csv desde los datos reales.
 
-    Separado de ejecutar_ingesta() a proposito: la ingesta es analisis y no
+    Separado de ejecutar_ingesta() a propósito: la ingesta es analisis y no
     deberia sobrescribir en silencio los archivos que lee la aplicacion.
     """
     log = print if verbose else (lambda *a, **k: None)
@@ -624,7 +615,24 @@ def publicar_para_app(ocurrencias: pd.DataFrame | None = None,
         "gbif_id": av["gbif_id"].to_numpy(),
         "origen": "GBIF",
     })
-    av_app.to_csv(DIR_DATOS / "avistamientos.csv", index=False)
+    # Los reportes que envio la gente desde la app NO vienen de GBIF y no se
+    # pueden regenerar: si se sobrescribe el CSV a secas, se pierden para
+    # siempre. Y el README invita a correr este pipeline para refrescar los
+    # datos, así que perderlos era cuestion de tiempo. Se rescatan antes de
+    # escribir y se reinsertan con ids que continuan la numeracion de GBIF.
+    destino = DIR_DATOS / "avistamientos.csv"
+    ciudadanos = pd.DataFrame()
+    if destino.exists():
+        previo = pd.read_csv(destino, low_memory=False)
+        if "origen" in previo.columns:
+            ciudadanos = previo[previo["origen"] != "GBIF"].copy()
+
+    if not ciudadanos.empty:
+        ciudadanos["id"] = range(len(av_app) + 1, len(av_app) + 1 + len(ciudadanos))
+        av_app = pd.concat([av_app, ciudadanos[av_app.columns]], ignore_index=True)
+        log(f"     {len(ciudadanos)} reportes ciudadanos conservados")
+
+    av_app.to_csv(destino, index=False)
     log(f"     avistamientos.csv   ({len(av_app):,} filas)")
 
 

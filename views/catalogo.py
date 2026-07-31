@@ -1,4 +1,4 @@
-"""Pestana: catalogo de las tres especies que reconoce el modelo."""
+"""Pestaña: catálogo de las tres especies que reconoce el modelo."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ CSV_FOTOS = RAIZ / "data" / "procesado" / "fotos_muestra.csv"
 
 @st.cache_data
 def _resumen() -> pd.DataFrame:
-    """Metricas por especie que dejo el pipeline de ingesta."""
+    """Métricas por especie que dejó el pipeline de ingesta."""
     if not CSV_RESUMEN.exists():
         return pd.DataFrame()
     return pd.read_csv(CSV_RESUMEN)
@@ -31,16 +31,16 @@ def _fotos() -> pd.DataFrame:
 
 
 def render() -> None:
-    st.subheader("Catalogo de especies")
-    st.write("Las tres especies que el modelo sabe reconocer. El catalogo, el mapa "
-             "y el analisis se limitan a estas tres.")
+    st.subheader("Catálogo de especies")
+    st.write("Las tres especies que el modelo sabe reconocer. El catálogo, el mapa "
+             "y el análisis se limitan a estas tres.")
 
     especies = datos.cargar_especies()
     resumen = _resumen()
     fotos = _fotos()
 
     # Con tres fichas no hace falta buscador ni filtro por tipo: se ven todas de
-    # una vez, y las tres son mamiferos.
+    # una vez, y las tres son mamíferos.
     for _, f in especies.iterrows():
         _ficha(f, resumen, fotos)
 
@@ -113,18 +113,18 @@ def _seccion_modelo() -> None:
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("""
-- Arquitectura: **YOLO11s** (deteccion de objetos)
-- Entrenamiento: 554 imagenes anotadas, en Kaggle (GPU T4)
+- Arquitectura: **YOLO11s** (detección de objetos)
+- Entrenamiento: 554 imágenes anotadas, en Kaggle (GPU T4)
 - Clases: `jabali`, `liebre`, `rata gris`
 - Devuelve la especie con mayor confianza de la foto
 """)
     with c2:
-        st.markdown("**Umbral de confirmacion por especie**")
+        st.markdown("**Umbral de confirmación por especie**")
         for etiqueta, umbral in modelo.UMBRALES_POR_ESPECIE.items():
             nombre = modelo.MAPA_ETIQUETAS.get(etiqueta, etiqueta)
             st.markdown(f"- {nombre}: **{umbral:.0%}**")
-        st.caption("Bajo ese umbral la deteccion se informa como coincidencia "
-                   "parcial y no habilita el envio de una alerta.")
+        st.caption("Bajo ese umbral la detección se informa como coincidencia "
+                   "parcial y no habilita el envío de una alerta.")
 
     st.caption("El modelo solo puede reconocer estas tres clases: cualquier otra "
-               "especie fotografiada quedara sin identificar.")
+               "especie fotografiada quedará sin identificar.")

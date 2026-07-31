@@ -1,6 +1,6 @@
-"""Ubicacion del usuario, compartida por todas las pestanas.
+"""Ubicación del usuario, compartida por todas las pestañas.
 
-Hoy la region se elige a mano en la barra lateral.
+Hoy la región se elige a mano en la barra lateral.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ REGION_POR_DEFECTO = "Metropolitana"
 
 
 def _al_cambiar_region():
-    """Callback que actualiza automaticamente las coordenadas al cambiar de region."""
+    """Callback que actualiza automáticamente las coordenadas al cambiar de región."""
     reg = st.session_state.get("ubi_region")
     if reg and reg in REGIONES:
         lat_ref, lon_ref = REGIONES[reg]
@@ -22,7 +22,7 @@ def _al_cambiar_region():
 
 
 def selector_sidebar() -> dict:
-    """Dibuja el selector de zona en la barra lateral y devuelve la ubicacion."""
+    """Dibuja el selector de zona en la barra lateral y devuelve la ubicación."""
     with st.sidebar:
         st.markdown("### 📍 Tu zona")
 
@@ -40,13 +40,13 @@ def selector_sidebar() -> dict:
         # Sin 'index': el valor vive en session_state bajo la key 'ubi_region',
         # y pasar ambos hace que Streamlit avise que el default se ignora.
         region = st.selectbox(
-            "Region",
+            "Región",
             list(REGIONES),
             key="ubi_region",
             on_change=_al_cambiar_region,
         )
 
-        radio = st.slider("Radio de busqueda (km)", 25, 500, 150, step=25, key="ubi_radio")
+        radio = st.slider("Radio de búsqueda (km)", 25, 500, 150, step=25, key="ubi_radio")
 
         with st.expander("Ajustar coordenadas"):
             lat = st.number_input("Latitud", format="%.4f", key="ubi_lat")
@@ -58,7 +58,7 @@ def selector_sidebar() -> dict:
 
 
 def actual() -> dict:
-    """Ubicacion vigente, para usar desde cualquier vista."""
+    """Ubicación vigente, para usar desde cualquier vista."""
     region = st.session_state.get("ubi_region", REGION_POR_DEFECTO)
     lat_ref, lon_ref = REGIONES.get(region, REGIONES[REGION_POR_DEFECTO])
     return {

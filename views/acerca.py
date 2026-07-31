@@ -1,4 +1,4 @@
-"""Pestana: que es el proyecto, como funciona y que falta."""
+"""Pestaña: que es el proyecto, como funciona y que falta."""
 
 from __future__ import annotations
 
@@ -13,21 +13,21 @@ def render() -> None:
 
     st.markdown("""
 **Proyecto Innovacien** es una plataforma ciudadana para detectar especies
-exoticas invasoras a partir de una foto, avisar a la autoridad competente y
-mostrar donde se ha registrado cada especie.
+exóticas invasoras a partir de una foto, avisar a la autoridad competente y
+mostrar dónde se ha registrado cada especie.
 
 El proyecto trabaja sobre **tres especies**, y solo sobre esas tres: son las que
-el modelo de vision aprendio a reconocer. Todo el resto del sistema —catalogo,
-mapa y analisis— se limita al mismo alcance, para que lo que la app muestra sea
+el modelo de visión aprendió a reconocer. Todo el resto del sistema —catálogo,
+mapa y análisis— se limita al mismo alcance, para que lo que la app muestra sea
 exactamente lo que el modelo puede identificar.
 
-**Como funciona**
+**Cómo funciona**
 
 1. La persona sube o toma una foto del animal.
 2. El modelo YOLO11 la analiza y devuelve la especie con su nivel de confianza.
-3. Si es una de las tres especies invasoras, se arma un aviso con la ubicacion
+3. Si es una de las tres especies invasoras, se arma un aviso con la ubicación
    y se dirige al servicio que corresponde.
-4. El registro queda en el mapa junto a los avistamientos historicos de GBIF.
+4. El registro queda en el mapa junto a los avistamientos históricos de GBIF.
 """)
 
     st.divider()
@@ -40,7 +40,7 @@ exactamente lo que el modelo puede identificar.
                      f"(impacto {info['impacto_ambiental'].lower()}, "
                      f"avisa a {info['autoridad']})")
         st.caption("Las tres clases que reconoce el modelo, y el alcance completo "
-                   "del catalogo y del analisis.")
+                   "del catálogo y del análisis.")
 
     with c2:
         st.markdown("##### Estado del modelo")
@@ -52,9 +52,9 @@ exactamente lo que el modelo puede identificar.
         for etiqueta, umbral in modelo.UMBRALES_POR_ESPECIE.items():
             nombre = modelo.MAPA_ETIQUETAS.get(etiqueta, etiqueta)
             st.write(f"    - {nombre}: **{umbral:.0%}**")
-        st.caption("El jabali exige mas certeza porque es grande y facil de "
-                   "reconocer; la liebre y la rata usan un umbral mas accesible "
-                   "por ser pequenas y mimetizarse.")
+        st.caption("El jabalí exige más certeza porque es grande y fácil de "
+                   "reconocer; la liebre y la rata usan un umbral más accesible "
+                   "por ser pequeñas y mimetizarse.")
 
     st.divider()
     c3, c4 = st.columns(2)
@@ -76,16 +76,16 @@ exactamente lo que el modelo puede identificar.
         st.markdown("##### Autoridades destinatarias")
         for sigla, info in autoridades.AUTORIDADES.items():
             st.write(f"- **{sigla}** — {info['nombre']}: {info['ambito']}")
-        st.caption("Canales de contacto por confirmar antes de cualquier envio real.")
+        st.caption("Canales de contacto por confirmar antes de cualquier envío real.")
 
     st.divider()
     st.markdown("##### Pendientes del equipo")
     st.markdown("""
-- [x] Definir la identidad visual final (logo, tipografia, colores).
-- [ ] Ampliar el set de entrenamiento: hoy son 554 imagenes para tres clases.
-- [ ] Evaluar el modelo con un set de prueba independiente y reportar metricas.
+- [x] Definir la identidad visual final (logo, tipografía, colores).
+- [ ] Ampliar el set de entrenamiento: hoy son 554 imágenes para tres clases.
+- [ ] Evaluar el modelo con un set de prueba independiente y reportar métricas.
 - [ ] Conseguir y confirmar los canales oficiales de aviso (SAG, CONAF).
-- [ ] Geolocalizacion automatica desde el navegador (hoy la comuna se elige a mano).
+- [ ] Geolocalización automática desde el navegador (hoy la comuna se elige a mano).
 - [ ] Base de datos compartida y cuentas de usuario: en Streamlit Cloud los
       reportes se pierden al reiniciar el contenedor.
 """)

@@ -25,7 +25,7 @@ AUTORIDADES = {
     },
     "CONAF": {
         "nombre": "Corporacion Nacional Forestal",
-        "ambito": "Flora invasora, bosque nativo y areas protegidas",
+        "ambito": "Flora invasora, bosque nativo y áreas protegidas",
         "contacto": "PENDIENTE",
     },
     "SERNAPESCA": {
@@ -35,7 +35,7 @@ AUTORIDADES = {
     },
     "MMA": {
         "nombre": "Ministerio del Medio Ambiente",
-        "ambito": "Coordinacion nacional de especies exoticas invasoras",
+        "ambito": "Coordinacion nacional de especies exóticas invasoras",
         "contacto": "PENDIENTE",
     },
 }

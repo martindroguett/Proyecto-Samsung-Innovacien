@@ -7804,8 +7804,9 @@ a.anchor-link {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Proyecto-Innovacien-%E2%80%94-1.-Obtenci%C3%B3n-y-limpieza-de-datos">Proyecto Innovacien — 1. Obtención y limpieza de datos<a class="anchor-link" href="#Proyecto-Innovacien-%E2%80%94-1.-Obtenci%C3%B3n-y-limpieza-de-datos">¶</a></h1><p><strong>Curso:</strong> Código y Programación · Samsung Innovation Campus Chile 2026 — Cohort 2</p>
 <h2 id="Pregunta-de-an%C3%A1lisis">Pregunta de análisis<a class="anchor-link" href="#Pregunta-de-an%C3%A1lisis">¶</a></h2><blockquote>
-<p><strong>¿Cómo se distribuye en Chile cada una de las tres especies invasoras que
-nuestro modelo identifica, y en qué se diferencian sus patrones territoriales?</strong></p>
+<p><strong>¿Cómo se distribuyen en Chile los registros de las tres especies invasoras
+que el modelo identifica —jabalí, liebre europea y rata gris— y en qué se
+diferencian sus patrones territoriales?</strong></p>
 </blockquote>
 <p>El proyecto tiene un modelo de visión (<code>core/best.pt</code>, YOLO11s) entrenado para
 reconocer <strong>tres especies</strong>, y solo tres:</p>
@@ -7835,20 +7836,12 @@ reconocer <strong>tres especies</strong>, y solo tres:</p>
 </tr>
 </tbody>
 </table>
-<p>Todo el análisis se limita a estas tres. Esa restricción no es una limitación
-que arrastremos: es la que hace que el análisis y el producto hablen de lo
-mismo. No tiene sentido analizar 800 especies si la app solo puede identificar
-tres.</p>
-<h3 id="Por-qu%C3%A9-este-notebook-ya-no-usa-GRIIS">Por qué este notebook ya no usa GRIIS<a class="anchor-link" href="#Por-qu%C3%A9-este-notebook-ya-no-usa-GRIIS">¶</a></h3><p>La versión anterior partía del <strong>GRIIS Chile</strong> (Global Register of Introduced
-and Invasive Species) para <em>descubrir</em> cuáles de las 844 especies exóticas del
-país están declaradas invasoras, y luego cruzarlas con GBIF.</p>
-<p>Ese paso desapareció, y vale explicar por qué: <strong>las tres especies ya están
-fijadas por el modelo</strong>. No hay nada que descubrir. Mantener GRIIS significaría
-descargar un registro de 844 taxones, resolver 844 nombres científicos contra
-la taxonomía de GBIF y descartar 841 filas — trabajo cuyo resultado ya
-conocemos de antemano.</p>
-<p>Trabajamos directo con el <strong><code>speciesKey</code></strong> de GBIF de cada especie, que además
-resuelve gratis el problema que GRIIS nos causaba: los sinónimos taxonómicos.</p>
+<p>Todo el análisis se limita a estas tres. Esa restricción es lo que hace que el
+análisis y el producto hablen de lo mismo: la aplicación no identifica nada que
+el análisis no cubra, ni al revés.</p>
+<p>Cada especie se consulta por su <strong><code>speciesKey</code></strong> de GBIF, un identificador
+numérico estable. Buscar por nombre científico obligaría a resolver sinónimos
+taxonómicos a mano; el <code>speciesKey</code> evita ese problema de origen.</p>
 <h3 id="Fuente-%C3%BAnica">Fuente única<a class="anchor-link" href="#Fuente-%C3%BAnica">¶</a></h3><p><strong>GBIF</strong> — Global Biodiversity Information Facility (<code>api.gbif.org</code>). Los
 registros chilenos vienen de monitoreo institucional, ciencia ciudadana
 (iNaturalist) y colecciones de museo. Licencias CC0 / CC-BY / CC-BY-NC.</p>
@@ -8710,8 +8703,8 @@ generó, no según quién lo publica:</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Y ahora la tabla que justifica todo el rediseño: <strong>el mismo indicador, calculado
-sobre la misma especie, cambia radicalmente según la fuente que la registró.</strong></p>
+<p>Y ahora la tabla que ordena el resto del análisis: <strong>el mismo indicador, calculado
+sobre la misma especie, cambia radicalmente según la fuente que lo registró.</strong></p>
 </div>
 </div>
 </div>
@@ -9043,46 +9036,36 @@ archivos que lee la app.</p>
 <tbody>
 <tr>
 <td>1</td>
-<td>GRIIS ya no aporta: las especies están fijadas por el modelo</td>
-<td>Eliminamos el registro y el emparejamiento taxonómico; usamos <code>speciesKey</code> directo</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Sinónimos taxonómicos (<em>Neovison</em> / <em>Neogale</em>)</td>
-<td>Desaparece como problema al consultar por <code>speciesKey</code> en vez de por nombre</td>
-</tr>
-<tr>
-<td>3</td>
 <td><code>eventDate</code> en 5 formatos; pandas infiere uno y descarta el resto</td>
 <td>Recorte a los 10 primeros caracteres + formato explícito (rescató 48.935 registros)</td>
 </tr>
 <tr>
-<td>4</td>
+<td>2</td>
 <td><code>stateProvince</code> de GBIF sucio e inconsistente</td>
 <td>No lo usamos: derivamos región y comuna de la coordenada</td>
 </tr>
 <tr>
-<td>5</td>
+<td>3</td>
 <td>Comunas enormes en el sur: la comuna asignada queda a 34 km de mediana</td>
 <td>La marcamos como poco confiable y agregamos por región, no por comuna</td>
 </tr>
 <tr>
-<td>6</td>
+<td>4</td>
 <td>Registros de ausencia contarían como avistamientos</td>
 <td>Filtrados por <code>occurrenceStatus</code></td>
 </tr>
 <tr>
-<td>7</td>
+<td>5</td>
 <td><strong>El 98% de los datos son cámaras trampa de CONAF en áreas protegidas</strong></td>
 <td><strong><code>fuente</code> como dimensión de primera clase; todo resultado territorial se reporta desagregado</strong></td>
 </tr>
 <tr>
-<td>8</td>
+<td>6</td>
 <td>Desbalance de 198:1 entre liebre y rata gris</td>
 <td>Se reporta siempre junto al indicador; nunca se comparan volúmenes absolutos entre especies</td>
 </tr>
 <tr>
-<td>9</td>
+<td>7</td>
 <td>Territorio insular distorsionaría el análisis latitudinal</td>
 <td>Marcado en <code>territorio</code> (resultó ser 1 solo registro)</td>
 </tr>

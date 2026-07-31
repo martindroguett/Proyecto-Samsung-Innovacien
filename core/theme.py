@@ -1,6 +1,6 @@
 """Identidad visual de Flora&Fauna Alerta: paleta y estilos compartidos.
 
-La paleta sale del logo: fondo hueso, tipografia ciruela, linea de arco en
+La paleta sale del logo: fondo hueso, tipografía ciruela, línea de arco en
 oliva y tres acentos saturados (bermellon, teal y dorado). El logo tambien
 define la forma: arcos y rectangulos de esquina muy redondeada, trazo fino,
 mucho aire y sombras casi inexistentes.
@@ -35,7 +35,7 @@ CARBON = "#3E3345"         # las alas: purpura muy oscuro.
 
 # Variantes oscurecidas para etiquetas con texto blanco encima. El bermellon
 # del logo da 4.34:1 con blanco, apenas bajo el 4.5:1 que pide AA en texto
-# pequeno, asi que las pastillas usan estas y el resto de la interfaz usa el
+# pequeño, así que las pastillas usan estas y el resto de la interfaz usa el
 # color de marca.
 BERMELLON_TAG = "#CE3F26"  # 4.81:1 con blanco
 DORADO_TAG = "#96660F"     # 4.99:1 con blanco
@@ -58,11 +58,11 @@ ENFERMEDAD_COLOR = CIRUELA
 # colores superan 3:1 sobre el fondo claro (WCAG 1.4.11 para objetos graficos)
 # y mantienen separacion en protanopia, deuteranopia y tritanopia:
 #
-#   jabali vs liebre   peor caso CVD  133.6
-#   jabali vs rata     peor caso CVD   71.3
+#   jabalí vs liebre   peor caso CVD  133.6
+#   jabalí vs rata     peor caso CVD   71.3
 #   liebre vs rata     peor caso CVD   62.4
 #
-# El dorado del logo quedo fuera a proposito: bajo protanopia cae a distancia
+# El dorado del logo quedo fuera a propósito: bajo protanopia cae a distancia
 # 1.7 del bermellon, o sea, el mismo color. Vive en la interfaz, no en los datos.
 ESPECIE_COLOR = {
     "Jabali": BERMELLON,           # 3.84:1 sobre hueso
@@ -319,7 +319,7 @@ def ficha_especie(nombre: str, cientifico: str, impacto_ambiental: str, detalle:
     """Devuelve el HTML de una ficha de especie, con foto y etiquetas.
 
     El filo izquierdo lleva el color de la ESPECIE, no el del impacto: es el
-    mismo codigo que usa el mapa, y asi la ficha y el punto se leen juntos.
+    mismo código que usa el mapa, y así la ficha y el punto se leen juntos.
     """
     color = ESPECIE_COLOR.get(nombre, IMPACTO_COLOR.get(impacto_ambiental, OLIVA_OSCURO))
 

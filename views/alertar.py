@@ -1,4 +1,4 @@
-"""Pestana principal: subir una foto, identificar la especie y alertar."""
+"""Pestaña principal: subir una foto, identificar la especie y alertar."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ def render() -> None:
     st.subheader("Alertar especie invasora")
     st.write("Sube o toma una foto. La identificamos y, si es una especie invasora, "
              "preparamos el aviso para la autoridad correspondiente.")
-    st.caption("El modelo reconoce jabali, liebre europea y rata gris. "
-               "Cualquier otra especie quedara sin identificar.")
+    st.caption("El modelo reconoce jabalí, liebre europea y rata gris. "
+               "Cualquier otra especie quedará sin identificar.")
 
     col_foto, col_resultado = st.columns([1, 1], gap="large")
 
@@ -31,7 +31,7 @@ def render() -> None:
 def _seccion_foto() -> None:
     st.markdown("#### 1. La foto")
 
-    origen = st.radio("Origen de la imagen", ["Subir archivo", "Usar camara"],
+    origen = st.radio("Origen de la imagen", ["Subir archivo", "Usar cámara"],
                       horizontal=True, label_visibility="collapsed")
 
     archivo = None
@@ -42,7 +42,7 @@ def _seccion_foto() -> None:
         archivo = st.camera_input("Tomar foto", label_visibility="collapsed")
 
     if archivo is None:
-        st.info("Formatos aceptados: JPG, PNG o WEBP. Mientras mas cerca y nitida la foto, mejor.")
+        st.info("Formatos aceptados: JPG, PNG o WEBP. Mientras más cerca y nitida la foto, mejor.")
         return
 
     st.image(archivo, caption="Imagen a analizar", width="stretch")
@@ -63,7 +63,7 @@ def _seccion_resultado() -> None:
     pred = st.session_state.get("alerta_prediccion")
     if pred is None:
         vacio("Sube una foto y presiona «Identificar especie».<br>"
-              "Aqui apareceran la especie detectada, su impacto ambiental "
+              "Aquí aparecerán la especie detectada, su impacto ambiental "
               "y el formulario de aviso.")
         return
 
@@ -103,8 +103,8 @@ def _formulario_alerta(pred) -> None:
     if ticket:
         st.success(f"Alerta registrada. Ticket **{ticket['ticket']}** "
                    f"dirigido a **{ticket['autoridad']}**.", icon="📨")
-        st.caption("Envio simulado: por ahora queda guardado en la pestana «Mis reportes».")
-        if st.button("Reportar otra observacion"):
+        st.caption("Envío simulado: por ahora queda guardado en la pestaña «Mis reportes».")
+        if st.button("Reportar otra observación"):
             for k in ("alerta_prediccion", "alerta_ticket"):
                 st.session_state.pop(k, None)
             st.rerun()
@@ -122,7 +122,7 @@ def _formulario_alerta(pred) -> None:
     index_reg = regiones_lista.index(ubi["region"]) if ubi["region"] in regiones_lista else 0
 
     region = c1.selectbox(
-        "Region",
+        "Región",
         regiones_lista,
         index=index_reg,
         key="form_alerta_region"
@@ -143,7 +143,7 @@ def _formulario_alerta(pred) -> None:
         lat = c3.number_input("Latitud", value=float(lat_def), format="%.4f")
         lon = c4.number_input("Longitud", value=float(lon_def), format="%.4f")
 
-        contacto = st.text_input("Tu correo o telefono (opcional)")
+        contacto = st.text_input("Tu correo o teléfono (opcional)")
         comentario = st.text_area("Comentario para la autoridad",
                                   placeholder="Cantidad de ejemplares, si estaba vivo, "
                                               "referencias del lugar…")

@@ -1,4 +1,4 @@
-<a><img src="https://github.com/martindroguett/Proyecto-Samsung-Innovacien/blob/main/imagesREADME/banner.png?raw=true" align="center" alt="Flora&Fauna" ></a>
+<a href="https://proyecto-samsung-innovacien-hl2shwgvd8d6kold6yzbtb.streamlit.app"><img src="https://github.com/martindroguett/Proyecto-Samsung-Innovacien/blob/main/imagesREADME/banner.png?raw=true" align="center" alt="Flora&Fauna" ></a>
 
 <h1 align="center"> Proyecto Innovacien - Flora&Fauna Alerta </h1>
 
@@ -6,6 +6,8 @@
 <a><img alt="Static Badge" src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python"></a>
 <a href = "https://innovacien.com"> <img alt="Static Badge" src="https://img.shields.io/badge/Samsung-%231428A0.svg?style=for-the-badge&logo=samsung&logoColor=white"></a>
 <a> <img alt="Static Badge" src="https://img.shields.io/badge/UI-Streamlit-red?logo=streamlit"></a>
+
+<a href="https://proyecto-samsung-innovacien-hl2shwgvd8d6kold6yzbtb.streamlit.app">¡Link de la aplicación! </a>
 
 ## Descripción
 La aplicación permite la identificación de una especie invasora a partir de una fotografía subida por el usuario. Una vez confirmado el avistamiento, se extraen las coordenadas para comunicarlo a las autoridades correspondientes. Además, sirve como guía informativa para concientizar a las personas sobre el impacto que pueden tener estas especies en su ecosistema.

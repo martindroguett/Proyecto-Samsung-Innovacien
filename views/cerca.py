@@ -1,4 +1,4 @@
-"""Pestana: donde se ha registrado cada una de las tres especies del proyecto."""
+"""Pestaña: donde se ha registrado cada una de las tres especies del proyecto."""
 
 from __future__ import annotations
 
@@ -9,23 +9,23 @@ import streamlit as st
 from core import datos, ubicacion
 from core.theme import ESPECIE_COLOR, ESPECIE_RGB, ficha_especie
 
-# Con ~49.000 registros reales el circulo de 8 km por avistamiento que usaba el
-# prototipo tapaba el mapa entero. Cada registro es una observacion puntual, no
-# un area de afectacion, asi que va como punto pequeno y la densidad se lee por
-# acumulacion. El radio se mantiene en metros para que escale con el zoom.
+# Con ~49.000 registros reales el círculo de 8 km por avistamiento que usaba el
+# prototipo tapaba el mapa entero. Cada registro es una observación puntual, no
+# un area de afectación, así que va como punto pequeño y la densidad se lee por
+# acumulación. El radio se mantiene en metros para que escale con el zoom.
 RADIO_PUNTO_M = 900
 RADIO_MIN_PX = 2
 
 # Basemap claro (Carto Positron). Sin esto pydeck cae en su estilo oscuro por
-# defecto, que rompe la identidad clara de la marca y ademas invalida el
-# contraste de los colores de especie: estan verificados contra fondo claro.
-# Carto no exige token, asi que funciona igual en local y en Streamlit Cloud.
+# defecto, que rompe la identidad clara de la marca y además invalida el
+# contraste de los colores de especie: están verificados contra fondo claro.
+# Carto no exige token, así que funciona igual en local y en Streamlit Cloud.
 MAPA_ESTILO = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
 
 
 def render() -> None:
     ubi = ubicacion.actual()
-    st.subheader("Registros de las tres especies en tu area")
+    st.subheader("Registros de las tres especies en tu área")
     st.write(f"Avistamientos a menos de **{ubi['radio_km']} km** de "
              f"**{ubi['region']}**. Cambia la zona en la barra lateral.")
 
@@ -39,7 +39,7 @@ def render() -> None:
 
     if cerca.empty:
         st.info("Sin registros para esos filtros. Prueba ampliando el radio o "
-                "quitando algun filtro.")
+                "quitando algún filtro.")
         return
 
     _resumen(cerca)
@@ -61,9 +61,9 @@ def render() -> None:
 def _filtros(cerca: pd.DataFrame) -> pd.DataFrame:
     """Una fila de filtros sobre los ejes que de verdad discriminan.
 
-    Ya no filtramos por 'tipo': las tres especies son mamiferos y el filtro no
-    separaba nada. Lo que si separa a estas tres es la especie, el entorno
-    urbano/rural y —sobre todo— la fuente que genero el registro.
+    Ya no filtramos por 'tipo': las tres especies son mamíferos y el filtro no
+    separaba nada. Lo que sí separa a estas tres es la especie, el entorno
+    urbano/rural y —sobre todo— la fuente que generó el registro.
     """
     f = st.columns([1.1, 1, 1.4])
 
@@ -76,20 +76,20 @@ def _filtros(cerca: pd.DataFrame) -> pd.DataFrame:
     fuentes = sorted(cerca["fuente"].dropna().unique())
     sel_fue = f[2].multiselect("Fuente del registro", fuentes, default=fuentes,
                                help="El 98% de los registros viene del monitoreo con "
-                                    "camaras trampa de CONAF en areas silvestres. "
-                                    "Filtra por fuente para no confundir donde esta "
-                                    "la especie con donde se instalaron camaras.")
+                                    "cámaras trampa de CONAF en áreas silvestres. "
+                                    "Filtra por fuente para no confundir dónde está "
+                                    "la especie con donde se instalaron cámaras.")
 
     out = cerca[cerca["nombre_comun"].isin(sel_esp)
                 & cerca["entorno"].isin(sel_ent)
                 & cerca["fuente"].isin(sel_fue)]
 
-    # La advertencia mas importante de esta vista.
+    # La advertencia más importante de esta vista.
     if len(sel_fue) > 1:
-        st.caption("⚠️ Estas viendo varias fuentes juntas. El patron que se ve en el "
-                   "mapa mezcla donde estan los animales con donde se observo: "
-                   "las camaras trampa no cubren ciudades y la ciencia ciudadana "
-                   "casi no cubre areas remotas.")
+        st.caption("⚠️ Estás viendo varias fuentes juntas. El patrón que se ve en el "
+                   "mapa mezcla donde están los animales con donde se observó: "
+                   "las cámaras trampa no cubren ciudades y la ciencia ciudadana "
+                   "casi no cubre áreas remotas.")
 
     return out
 
@@ -103,7 +103,7 @@ def _resumen(cerca: pd.DataFrame) -> None:
     c[1].metric("Especies presentes", cerca["nombre_comun"].nunique())
     urb = (cerca["entorno"] == "Urbano").mean() * 100
     c[2].metric("En zona urbana", f"{urb:.0f}%")
-    c[3].metric("Mas cercano", f"{cerca['distancia_km'].min():.0f} km")
+    c[3].metric("Más cercano", f"{cerca['distancia_km'].min():.0f} km")
 
     # Desglose por especie con su color de identidad, para que la leyenda del
     # mapa quede establecida antes de mirarlo.
@@ -176,15 +176,15 @@ def _mapa(cerca: pd.DataFrame, lat_centro: float, lon_centro: float) -> None:
         for n in sorted(df["nombre_comun"].unique()) if n in ESPECIE_COLOR
     )
     st.markdown(f"<div style='font-size:0.85rem'>{leyenda}</div>", unsafe_allow_html=True)
-    st.caption("Cada punto es una observacion registrada, no un area de afectacion. "
-               "Las zonas mas saturadas concentran mas observaciones.")
+    st.caption("Cada punto es una observación registrada, no un área de afectación. "
+               "Las zonas más saturadas concentran más observaciones.")
 
 
 # --------------------------------------------------------------------------
 # Lista y tabla
 # --------------------------------------------------------------------------
 def _lista(cerca: pd.DataFrame) -> None:
-    st.markdown("##### Las mas cercanas")
+    st.markdown("##### Las más cercanas")
     resumen = (cerca.sort_values("distancia_km")
                     .drop_duplicates("nombre_comun")
                     .head(3))
@@ -192,7 +192,7 @@ def _lista(cerca: pd.DataFrame) -> None:
         detalle = (f"A {f['distancia_km']:.0f} km · {f['comuna']}, {f['region']} · "
                    f"visto el {f['fecha']:%d-%m-%Y} · {f['entorno'].lower()}")
         es_vector = str(f.get("portador_enfermedades", "")).strip().lower() in ["si", "sí", "true", "1"]
-        # La ficha muestra un placeholder si no recibe foto, asi que le pasamos la
+        # La ficha muestra un placeholder si no recibe foto, así que le pasamos la
         # misma que usa el catalogo (esta cacheada: son solo tres especies).
         foto = datos.imagen_especie(f["nombre_comun"], f.get("nombre_cientifico", ""),
                                     f.get("imagen_url"))
@@ -214,7 +214,7 @@ def _tabla(cerca: pd.DataFrame) -> None:
     st.dataframe(
         cerca[cols].rename(columns={
             "nombre_comun": "Especie", "nombre_cientifico": "Nombre cientifico",
-            "comuna": "Comuna", "region": "Region", "fecha": "Fecha",
+            "comuna": "Comuna", "region": "Región", "fecha": "Fecha",
             "entorno": "Entorno", "fuente": "Fuente", "estado": "Estado",
             "distancia_km": "Distancia (km)"}),
         hide_index=True, width="stretch",

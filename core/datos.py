@@ -1,8 +1,8 @@
 """Carga y consulta de datos: catalogo de especies, avistamientos y reportes.
 
 Los CSV de data/ son DATOS REALES descargados de GBIF por core/ingesta.py, y
-cubren unicamente las tres especies que el modelo sabe reconocer:
-jabali, liebre europea y rata gris.
+cubren únicamente las tres especies que el modelo sabe reconocer:
+jabalí, liebre europea y rata gris.
 
   - especies.csv       las tres fichas del catalogo
   - avistamientos.csv  registros historicos de GBIF + los que envia la app
@@ -43,9 +43,9 @@ USAR_WIKIPEDIA_COMO_RESPALDO = True
 
 EXTENSIONES_IMAGEN = (".jpg", ".jpeg", ".png", ".webp")
 
-# Las tres especies del proyecto son mamiferos, asi que 'tipo' ya no discrimina
+# Las tres especies del proyecto son mamíferos, así que 'tipo' ya no discrimina
 # nada y dejamos de ofrecerlo como filtro. Lo que si distingue a estas tres es
-# donde aparecen: la rata gris es urbana, el jabali y la liebre son rurales.
+# donde aparecen: la rata gris es urbana, el jabalí y la liebre son rurales.
 TIPOS = ["Animal"]
 NIVELES_IMPACTO = ["Alto", "Medio", "Bajo"]
 ENTORNOS = ["Urbano", "Rural"]
@@ -124,7 +124,7 @@ def guardar_reporte(reporte: dict) -> None:
     existe = CSV_REPORTES.exists()
     df.to_csv(CSV_REPORTES, mode="a", header=not existe, index=False)
 
-    # Sincronizar automaticamente el nuevo reporte en avistamientos.csv
+    # Sincronizar automáticamente el nuevo reporte en avistamientos.csv
     try:
         guardar_avistamiento(
             especie_nombre_o_id=reporte.get("especie", ""),

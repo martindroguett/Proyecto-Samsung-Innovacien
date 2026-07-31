@@ -1,4 +1,4 @@
-"""Pestana: historial de reportes enviados desde la app."""
+"""Pestaña: historial de reportes enviados desde la app."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ def render() -> None:
     reportes = datos.cargar_reportes()
 
     if reportes.empty:
-        st.info("Todavia no hay reportes. Genera el primero en la pestana «Alertar animal».")
+        st.info("Todavia no hay reportes. Genera el primero en la pestaña «Alertar animal».")
         pendiente("cuentas de usuario, para que cada persona vea solo sus reportes, "
                   "y estado real devuelto por la autoridad.")
         return
@@ -29,7 +29,7 @@ def render() -> None:
         reportes[["ticket", "fecha_hora", "especie", "impacto_ambiental", "comuna",
                   "region", "autoridad", "estado"]]
         .rename(columns={"ticket": "Ticket", "fecha_hora": "Fecha", "especie": "Especie",
-                         "impacto_ambiental": "Impacto ambiental", "comuna": "Comuna", "region": "Region",
+                         "impacto_ambiental": "Impacto ambiental", "comuna": "Comuna", "region": "Región",
                          "autoridad": "Autoridad", "estado": "Estado"}),
         hide_index=True, width="stretch",
     )
@@ -38,4 +38,4 @@ def render() -> None:
                        reportes.to_csv(index=False).encode("utf-8"),
                        file_name="reportes_innovacien.csv", mime="text/csv")
 
-    pendiente("seguimiento real del ticket con la autoridad (hoy el envio es simulado).")
+    pendiente("seguimiento real del ticket con la autoridad (hoy el envío es simulado).")
