@@ -1,9 +1,9 @@
 [theme]
 base = "light"
-primaryColor = "#4A7C59"           # verde musgo / bosque
-backgroundColor = "#FBF9F3"        # arena clara
-secondaryBackgroundColor = "#EFEADB"  # arena
-textColor = "#2B2B26"              # corteza
+primaryColor = "#D9452B"              # bermellon del pajaro del logo
+backgroundColor = "#F2F1ED"           # hueso calido del logo
+secondaryBackgroundColor = "#E6E3D8"  # arena, para barra lateral y widgets
+textColor = "#33272E"                 # negro calido con matiz ciruela
 font = "sans serif"
 
 [server]

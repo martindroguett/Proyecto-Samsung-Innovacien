@@ -1,82 +1,124 @@
-"""Paleta de colores naturales y estilos compartidos de la app."""
+"""Identidad visual de Flora&Fauna Alerta: paleta y estilos compartidos.
+
+La paleta sale del logo: fondo hueso, tipografia ciruela, linea de arco en
+oliva y tres acentos saturados (bermellon, teal y dorado). El logo tambien
+define la forma: arcos y rectangulos de esquina muy redondeada, trazo fino,
+mucho aire y sombras casi inexistentes.
+"""
 
 import streamlit as st
 
-# Paleta natural (bosque / arena / corteza / terracota)
-VERDE = "#4A7C59"
-VERDE_OSCURO = "#2F4F3E"
-VERDE_CLARO = "#8FB996"
-ARENA = "#EFEADB"
-ARENA_CLARA = "#FBF9F3"
-CORTEZA = "#5C4A38"
-TERRACOTA = "#B4622F"
-TEXTO = "#2B2B26"
+# --- Superficies -----------------------------------------------------------
+HUESO = "#F2F1ED"          # fondo de la app
+BLANCO = "#FFFFFF"         # tarjetas
+ARENA = "#E6E3D8"          # superficie secundaria, calida
+ARENA_SUAVE = "#EDEBE1"    # separadores y rellenos tenues
 
-# Colores por nivel de impacto ambiental (se usan en el mapa y en las fichas)
+# --- Tipografia ------------------------------------------------------------
+CIRUELA = "#4A2C3F"        # titulos: el color del lettering del logo
+CIRUELA_OSCURA = "#38212F"
+TEXTO = "#33272E"          # cuerpo, negro calido con matiz ciruela
+OLIVA_OSCURO = "#6F6A4E"   # texto secundario (4.83:1 sobre hueso)
+OLIVA_TEXTO = "#4F4B35"    # oliva oscurecido, para texto sobre fondo oliva claro.
+
+# --- Linea y decoracion ----------------------------------------------------
+OLIVA = "#A8A181"          # arcos, bordes y hojas del logo. SOLO decorativo:
+                           # da 2.30:1 sobre hueso, no sirve para texto.
+DORADO = "#E9C34A"         # la pina del logo. Decorativo, nunca datos: bajo
+                           # protanopia se confunde con el bermellon.
+
+# --- Acentos ---------------------------------------------------------------
+BERMELLON = "#D9452B"      # el pajaro rojo. Accion principal y acento.
+TEAL = "#2E6B7C"           # la cabeza del pajaro chico.
+TEAL_TEXTO = "#1F4E5B"     # teal oscurecido, para texto sobre fondo teal claro.
+CARBON = "#3E3345"         # las alas: purpura muy oscuro.
+
+# Variantes oscurecidas para etiquetas con texto blanco encima. El bermellon
+# del logo da 4.34:1 con blanco, apenas bajo el 4.5:1 que pide AA en texto
+# pequeno, asi que las pastillas usan estas y el resto de la interfaz usa el
+# color de marca.
+BERMELLON_TAG = "#CE3F26"  # 4.81:1 con blanco
+DORADO_TAG = "#96660F"     # 4.99:1 con blanco
+
+# Colores por nivel de impacto ambiental. Es una escala ordenada (bajo -> alto),
+# no categorias, y todas cumplen AA con texto blanco.
 IMPACTO_COLOR = {
-    "Alto": "#B4622F",     # terracota
-    "Medio": "#C9A227",    # ocre
-    "Bajo": "#4A7C59",     # verde
+    "Alto": BERMELLON_TAG,
+    "Medio": DORADO_TAG,
+    "Bajo": OLIVA_OSCURO,
 }
 
-# Color de la etiqueta de especie portadora de enfermedades
-ENFERMEDAD_COLOR = "#8E3B46"  # burdeo, para distinguirla del impacto ambiental
+# La etiqueta sanitaria usa el ciruela de la marca para no competir con la
+# escala de impacto: distinto eje, distinto color.
+ENFERMEDAD_COLOR = CIRUELA
 
-# Identidad de especie para las visualizaciones (mapa y graficos del analisis).
+# Identidad de especie para el mapa y los graficos.
 #
-# Los colores de arriba codifican un nivel ordenado (impacto bajo -> alto) y por
-# eso funcionan como escala. Para distinguir ESPECIES hace falta otra cosa: hues
-# categoricos. La paleta natural de la marca no sirve ahi —sus verdes apagados
-# caen bajo el piso de croma y se leen como gris, y el par naranja/verde es el
-# que la daltonia rojo-verde vuelve indistinguible—. Estos tres pasan las
-# verificaciones de contraste y de separacion CVD en modo claro y oscuro, en
-# todos los pares.
+# Aqui la marca SI viste los datos, pero solo despues de verificarlo. Los tres
+# colores superan 3:1 sobre el fondo claro (WCAG 1.4.11 para objetos graficos)
+# y mantienen separacion en protanopia, deuteranopia y tritanopia:
 #
-# La marca sigue vistiendo la interfaz; los datos usan colores verificados.
+#   jabali vs liebre   peor caso CVD  133.6
+#   jabali vs rata     peor caso CVD   71.3
+#   liebre vs rata     peor caso CVD   62.4
+#
+# El dorado del logo quedo fuera a proposito: bajo protanopia cae a distancia
+# 1.7 del bermellon, o sea, el mismo color. Vive en la interfaz, no en los datos.
 ESPECIE_COLOR = {
-    "Jabali": "#EB6834",          # naranja
-    "Liebre europea": "#2A78D6",  # azul
-    "Rata gris": "#1BAF7A",       # aqua
+    "Jabali": BERMELLON,           # 3.84:1 sobre hueso
+    "Liebre europea": TEAL,        # 5.29:1
+    "Rata gris": OLIVA_OSCURO,     # 4.83:1
 }
 
 ESPECIE_RGB = {
-    "Jabali": [235, 104, 52],
-    "Liebre europea": [42, 120, 214],
-    "Rata gris": [27, 175, 122],
+    "Jabali": [217, 69, 43],
+    "Liebre europea": [46, 107, 124],
+    "Rata gris": [111, 106, 78],
 }
 
-# El aqua queda bajo 3:1 contra la superficie clara, asi que la identidad nunca
-# va solo en el color: leyenda visible y tabla de datos siempre presentes.
 GRIS_NEUTRO = "#8A8A82"
 
 _CSS = f"""
 <style>
-  /* ---- Encabezado ---- */
+  /* ---- Lienzo general ---- */
+  .stApp {{ background: {HUESO}; }}
+
+  /* ---- Encabezado: el arco del logo, en CSS ---- */
   .inv-hero {{
-      background: linear-gradient(135deg, {VERDE_OSCURO} 0%, {VERDE} 55%, {VERDE_CLARO} 100%);
-      border-radius: 16px;
-      padding: 1.6rem 1.9rem;
-      color: {ARENA_CLARA};
-      margin-bottom: 0.4rem;
+      background: {BLANCO};
+      border: 1.5px solid {OLIVA};
+      border-radius: 30px;
+      padding: 1.7rem 2.1rem 1.5rem 2.1rem;
+      margin-bottom: 0.9rem;
+      text-align: center;
   }}
   .inv-hero h1 {{
       margin: 0;
-      font-size: 2.1rem;
-      letter-spacing: -0.5px;
-      color: {ARENA_CLARA};
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: {CIRUELA};
+  }}
+  .inv-hero .inv-regla {{
+      width: 62px;
+      height: 2px;
+      background: {OLIVA};
+      margin: 0.7rem auto 0.6rem auto;
+      border-radius: 2px;
   }}
   .inv-hero p {{
-      margin: 0.35rem 0 0 0;
-      font-size: 1rem;
-      opacity: 0.92;
+      margin: 0;
+      font-size: 0.97rem;
+      color: {OLIVA_OSCURO};
   }}
 
   /* ---- Fichas / tarjetas ---- */
   .inv-card {{
-      background: #FFFFFF;
-      border: 1px solid {ARENA};
-      border-left: 5px solid {VERDE};
-      border-radius: 12px;
+      background: {BLANCO};
+      border: 1.5px solid {OLIVA};
+      border-left: 5px solid {OLIVA};
+      border-radius: 22px;
       padding: 0.9rem 1.1rem;
       margin-bottom: 0.7rem;
       overflow: hidden;
@@ -86,14 +128,14 @@ _CSS = f"""
   }}
   .inv-card h4 {{
       margin: 0 0 0.2rem 0;
-      color: {VERDE_OSCURO};
+      color: {CIRUELA};
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
   }}
   .inv-card .sci {{
       font-style: italic;
-      color: {CORTEZA};
+      color: {OLIVA_OSCURO};
       font-size: 0.88rem;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -117,7 +159,7 @@ _CSS = f"""
       width: 100%;
       height: 260px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: 16px;
       margin-bottom: 0.6rem;
       display: block;
       flex-shrink: 0;
@@ -125,45 +167,120 @@ _CSS = f"""
   .inv-foto-placeholder {{
       width: 100%;
       height: 260px;
-      border-radius: 8px;
+      border-radius: 16px;
       margin-bottom: 0.6rem;
       flex-shrink: 0;
       background: {ARENA};
-      color: {CORTEZA};
+      color: {OLIVA_OSCURO};
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.85rem;
   }}
 
-  /* ---- Etiquetas (impacto ambiental / portador de enfermedades) ---- */
+  /* ---- Etiquetas (impacto ambiental / portadora de enfermedades) ---- */
   .inv-tag {{
       display: inline-block;
-      padding: 0.12rem 0.6rem;
+      padding: 0.14rem 0.65rem;
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 600;
-      color: #FFFFFF;
+      color: {BLANCO};
   }}
 
-  /* ---- Pestañas ---- */
+  /* ---- Contenedores con borde de Streamlit (st.container(border=True)) ---- */
+  .stApp [data-testid="stVerticalBlockBorderWrapper"] {{
+      border-radius: 22px;
+  }}
+
+  /* ---- Pestanas ---- */
   .stTabs [data-baseweb="tab-list"] {{
-      gap: 0.35rem;
-      border-bottom: 2px solid {ARENA};
+      gap: 0.4rem;
+      border-bottom: 1.5px solid {OLIVA};
   }}
   .stTabs [data-baseweb="tab"] {{
       font-weight: 600;
-      color: {CORTEZA};
+      color: {OLIVA_OSCURO};
+  }}
+  .stTabs [aria-selected="true"] {{
+      color: {CIRUELA} !important;
   }}
 
-  /* Placeholder visual para secciones aún no implementadas */
+  /* ---- Titulos de seccion ---- */
+  .stApp h2, .stApp h3, .stApp h4, .stApp h5 {{ color: {CIRUELA}; }}
+
+  /* ---- Metricas ---- */
+  .stApp [data-testid="stMetricValue"] {{ color: {CIRUELA}; }}
+  .stApp [data-testid="stMetricLabel"] {{ color: {OLIVA_OSCURO}; }}
+
+  /* ---- Pastillas de los multiselect ----
+     Por defecto heredan el primaryColor y una fila de filtros queda como un
+     bloque macizo de bermellon, que le come el protagonismo a los acentos de
+     verdad. En arena con texto ciruela leen como control, no como alerta. */
+  .stApp [data-baseweb="tag"] {{
+      background-color: {ARENA} !important;
+      color: {CIRUELA} !important;
+  }}
+  .stApp [data-baseweb="tag"] span,
+  .stApp [data-baseweb="tag"] svg {{
+      color: {CIRUELA} !important;
+      fill: {CIRUELA} !important;
+  }}
+
+  /* ---- Avisos ----
+     Streamlit trae azul para 'info' y verde para 'success'; ninguno de los dos
+     existe en la marca. Los pasamos a teal y oliva.
+     Ojo con el detalle: teal al 10% y oliva al 20% dan fondos casi identicos
+     (#dee4e2 vs #d8d6cd), asi que el fondo solo no alcanza para distinguirlos.
+     El filete lateral es el que hace de verdad la diferencia.
+     El rojo de error y el ambar de warning se dejan: ya armonizan con la paleta
+     y su significado es convencional. */
+  .stApp [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]) {{
+      background-color: rgba(46, 107, 124, 0.10);
+      border-left: 3px solid {TEAL};
+  }}
+  .stApp [data-testid="stAlertContentInfo"] {{
+      color: {TEAL_TEXTO} !important;   /* 7.09:1 sobre el fondo del aviso */
+  }}
+
+  .stApp [data-testid="stAlertContainer"]:has([data-testid="stAlertContentSuccess"]) {{
+      background-color: rgba(111, 106, 78, 0.20);
+      border-left: 3px solid {OLIVA_OSCURO};
+  }}
+  .stApp [data-testid="stAlertContentSuccess"] {{
+      color: {OLIVA_TEXTO} !important;  /* 6.03:1 sobre el fondo del aviso */
+  }}
+
+  /* ---- Codigo en linea ----
+     Streamlit lo pinta verde por defecto, el unico verde que quedaba en la
+     interfaz despues del cambio de paleta. */
+  .stApp .stMarkdown code {{
+      color: {CIRUELA};
+      background-color: {ARENA_SUAVE};
+  }}
+
+  /* ---- Bloque de pendientes ---- */
   .inv-todo {{
-      border: 1.5px dashed {VERDE_CLARO};
-      border-radius: 12px;
+      border: 1.5px dashed {OLIVA};
+      border-radius: 22px;
       padding: 1rem 1.2rem;
-      background: {ARENA_CLARA};
-      color: {CORTEZA};
+      background: {ARENA_SUAVE};
+      color: {OLIVA_OSCURO};
       font-size: 0.9rem;
+  }}
+
+  /* ---- Estado vacio ----
+     Parecido al de pendientes, pero NO es lo mismo y no debe confundirse: este
+     dice "todavia no hay nada que mostrar aqui", no "esto falta construirlo".
+     Sin borde punteado, que es lo que lee como obra en curso. */
+  .inv-vacio {{
+      border: 1.5px solid {OLIVA};
+      border-radius: 22px;
+      padding: 1.4rem 1.2rem;
+      background: {BLANCO};
+      color: {OLIVA_OSCURO};
+      font-size: 0.9rem;
+      text-align: center;
   }}
 </style>
 """
@@ -174,11 +291,12 @@ def aplicar_tema() -> None:
     st.markdown(_CSS, unsafe_allow_html=True)
 
 
-def encabezado(titulo: str = "Proyecto Innovacien",
+def encabezado(titulo: str = "Flora&Fauna Alerta",
                bajada: str = "Detecta especies invasoras desde una foto y alerta a las autoridades.") -> None:
     st.markdown(
         f"""<div class="inv-hero">
-              <h1>🌿 {titulo}</h1>
+              <h1>{titulo}</h1>
+              <div class="inv-regla"></div>
               <p>{bajada}</p>
             </div>""",
         unsafe_allow_html=True,
@@ -187,7 +305,7 @@ def encabezado(titulo: str = "Proyecto Innovacien",
 
 def tag_impacto(nivel: str) -> str:
     """Devuelve el HTML de una etiqueta de impacto ambiental."""
-    color = IMPACTO_COLOR.get(nivel, VERDE)
+    color = IMPACTO_COLOR.get(nivel, OLIVA_OSCURO)
     return f'<span class="inv-tag" style="background:{color}">Impacto {nivel.lower()}</span>'
 
 
@@ -198,8 +316,12 @@ def tag_enfermedad() -> str:
 
 def ficha_especie(nombre: str, cientifico: str, impacto_ambiental: str, detalle: str = "",
                   imagen_url: str | None = None, portador_enfermedades: bool = False) -> str:
-    """Devuelve el HTML de una ficha de especie, con foto y etiquetas."""
-    color = IMPACTO_COLOR.get(impacto_ambiental, VERDE)
+    """Devuelve el HTML de una ficha de especie, con foto y etiquetas.
+
+    El filo izquierdo lleva el color de la ESPECIE, no el del impacto: es el
+    mismo codigo que usa el mapa, y asi la ficha y el punto se leen juntos.
+    """
+    color = ESPECIE_COLOR.get(nombre, IMPACTO_COLOR.get(impacto_ambiental, OLIVA_OSCURO))
 
     if imagen_url:
         foto_html = f'<img class="inv-foto" src="{imagen_url}" alt="{nombre}">'
@@ -220,6 +342,17 @@ def ficha_especie(nombre: str, cientifico: str, impacto_ambiental: str, detalle:
 
 
 def pendiente(texto: str) -> None:
-    """Bloque visual para marcar lo que falta construir."""
+    """Bloque visual para marcar lo que falta CONSTRUIR.
+
+    No usar para estados vacios de una funcion que si esta terminada: para eso
+    esta vacio(). Confundirlos hace que la app se presente como inacabada donde
+    en realidad solo esta esperando que la persona haga algo.
+    """
     st.markdown(f'<div class="inv-todo">🚧 <b>Por completar:</b> {texto}</div>',
+                unsafe_allow_html=True)
+
+
+def vacio(texto: str, icono: str = "📷") -> None:
+    """Bloque para cuando todavia no hay nada que mostrar, pero la funcion existe."""
+    st.markdown(f'<div class="inv-vacio">{icono}<br>{texto}</div>',
                 unsafe_allow_html=True)

@@ -66,7 +66,7 @@ exactamente lo que el modelo puede identificar.
             st.write(f"- **{len(av):,}** avistamientos historicos")
             st.write(f"- Fuente: GBIF (iNaturalist y colecciones), Chile")
             st.write(f"- Cobertura: {av['fecha'].dt.year.min():.0f}–{av['fecha'].dt.year.max():.0f}")
-            st.write(f"- Regiones con registro: {av['region'].nunique()} de 17")
+            st.write(f"- Regiones con registro: {av['region'].nunique()} de 16")
         except Exception as e:
             st.warning(f"No se pudieron leer los avistamientos: {e}")
         st.caption("Datos reales descargados de GBIF, no de ejemplo. "
@@ -81,10 +81,11 @@ exactamente lo que el modelo puede identificar.
     st.divider()
     st.markdown("##### Pendientes del equipo")
     st.markdown("""
+- [x] Definir la identidad visual final (logo, tipografia, colores).
 - [ ] Ampliar el set de entrenamiento: hoy son 554 imagenes para tres clases.
-- [ ] Conseguir y confirmar los canales oficiales de aviso (SAG, CONAF).
-- [ ] Geolocalizacion automatica desde el navegador.
-- [ ] Base de datos compartida y cuentas de usuario.
-- [ ] Definir la identidad visual final (logo, tipografia, colores).
 - [ ] Evaluar el modelo con un set de prueba independiente y reportar metricas.
+- [ ] Conseguir y confirmar los canales oficiales de aviso (SAG, CONAF).
+- [ ] Geolocalizacion automatica desde el navegador (hoy la comuna se elige a mano).
+- [ ] Base de datos compartida y cuentas de usuario: en Streamlit Cloud los
+      reportes se pierden al reiniciar el contenedor.
 """)

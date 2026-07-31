@@ -16,6 +16,12 @@ from core.theme import ESPECIE_COLOR, ESPECIE_RGB, ficha_especie
 RADIO_PUNTO_M = 900
 RADIO_MIN_PX = 2
 
+# Basemap claro (Carto Positron). Sin esto pydeck cae en su estilo oscuro por
+# defecto, que rompe la identidad clara de la marca y ademas invalida el
+# contraste de los colores de especie: estan verificados contra fondo claro.
+# Carto no exige token, asi que funciona igual en local y en Streamlit Cloud.
+MAPA_ESTILO = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+
 
 def render() -> None:
     ubi = ubicacion.actual()
@@ -155,6 +161,7 @@ def _mapa(cerca: pd.DataFrame, lat_centro: float, lon_centro: float) -> None:
 
     st.pydeck_chart(pdk.Deck(
         layers=[capa, centro],
+        map_style=MAPA_ESTILO,
         initial_view_state=pdk.ViewState(latitude=lat_centro, longitude=lon_centro,
                                          zoom=6, pitch=0),
         tooltip={"html": "<b>{nombre_comun}</b> (<i>{nombre_cientifico}</i>)<br/>"

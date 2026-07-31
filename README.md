@@ -8,9 +8,9 @@
 <a> <img alt="Static Badge" src="https://img.shields.io/badge/UI-Streamlit-red?logo=streamlit"></a>
 
 ## Descripción
-La aplicación permite la identificación de una especie invasora, sea animal o plata, a partir de una fotografía subida por el usuario. Una vez que el avistamiento está confirmado, se obtienen extraen las coordenadas para de esta forma comunicar a las autoridades correspondientes. Además, sirve como guía informátiva para concientizar a las personas sobre el impacto que pueden tener estas especies en su ecosistema.
+La aplicación permite la identificación de una especie invasora a partir de una fotografía subida por el usuario. Una vez confirmado el avistamiento, se extraen las coordenadas para comunicarlo a las autoridades correspondientes. Además, sirve como guía informativa para concientizar a las personas sobre el impacto que pueden tener estas especies en su ecosistema.
 
-En su fase inicial, la aplicación es capaz de diferencias a las especies de jabalí, liebre europea y rata gris. Se espera poder escalarla a identificar todos los animales catálogados como invasores.
+En su fase inicial, la aplicación es capaz de diferenciar las especies de jabalí, liebre europea y rata gris. Se espera poder escalarla a identificar todos los animales catalogados como invasores.
 
 ## Integrantes
 <table>
@@ -63,7 +63,7 @@ En su fase inicial, la aplicación es capaz de diferencias a las especies de jab
 | Rata gris | 231 | Metropolitana (23%) | -35,8 | 36,4% |
 
 El **jabalí** es el más concentrado: nueve de cada diez registros están en Los
-Lagos, el 98% se reparte entre esa región y Aysén, y no aparece al norte de
+Lagos, el 97% se reparte entre esa región y Aysén, y no aparece al norte de
 Atacama. Es, además, prácticamente invisible en zonas urbanas.
 
 La **liebre europea** ocupa el país entero —desde Arica hasta Magallanes, las 15
@@ -90,8 +90,9 @@ cubierta, con 231 registros en más de un siglo.
 
 Los avistamientos iniciales provienen de **GBIF** (*Global Biodiversity Information Facility*),
 consultado por su API pública con filtro de país Chile y coordenada obligatoria. El
-resultado es `data/avistamientos.csv`: **49.133 registros georreferenciados** entre
-1907 y 2026, en 15 regiones y 161 comunas.
+resultado es la base de `data/avistamientos.csv`: **49.133 registros georreferenciados**
+entre 1907 y 2026, en 15 regiones y 161 comunas. A esa base la aplicación le va sumando
+los reportes que envía la gente.
 
 | Especie | Registros | Rango |
 |---|---:|---|
@@ -103,7 +104,7 @@ El 98% son detecciones de cámaras trampa de CONAF; el resto se reparte entre ci
 ciudadana de iNaturalist (336), estudios científicos (296) y colecciones museológicas
 (198). Antes de llegar a la tabla final, los datos pasan por seis filtros —duplicados,
 coordenadas inválidas o fuera de Chile, registros de ausencia y fecha imprecisa—
-documentados.
+documentados en `data/procesado/limpieza_bitacora.csv`.
 
 ## Estructura
 
@@ -112,13 +113,13 @@ Proyecto-Samsung-Innovacien
 ├── app.py                        # Punto de entrada: arma las pestañas de Streamlit
 ├── requirements.txt              # Dependencias de la app (lo que instala Streamlit Cloud)
 ├── requirements-dev.txt          # Herramientas solo para los notebooks
-├── packages.txt                  # Librerias del sistema (libGL, que necesita OpenCV)
+├── packages.txt                  # Librerías del sistema (libGL y libglib, que necesita OpenCV)
 ├── .streamlit/
 │   └── config.toml               # Tema visual y limite de subida
 │
-├── core/                         # Lgica del proyecto
+├── core/                         # Lógica del proyecto
 │   ├── modelo.py                 # Clasificador YOLO11 y umbrales por especie
-│   ├── best.pt                   # Modelo entrenado (YOLO11s, 19 MB)
+│   ├── best.pt                   # Modelo entrenado (YOLO11s, 18 MB)
 │   ├── ingesta.py                # Descarga y limpieza de datos desde GBIF
 │   ├── datos.py                  # Carga de especies, avistamientos y reportes
 │   ├── comunas.py                # Comunas de Chile con sus coordenadas
@@ -135,10 +136,10 @@ Proyecto-Samsung-Innovacien
 │
 ├── data/
 │   ├── avistamientos.csv         # Dataset principal: 49.133 registros de GBIF
-│   ├── especies.csv              # Fichas del catalogo
-│   ├── zonas_urbanas.csv         # 30 zonas urbanas (clasificacion urbano/rural)
+│   ├── especies.csv              # Fichas del catálogo
+│   ├── zonas_urbanas.csv         # 30 zonas urbanas (clasificación urbano/rural)
 │   ├── crudo/                    # Descarga en bruto de GBIF, una tabla por especie
-│   ├── procesado/                # Tablas derivadas del analisis
+│   ├── procesado/                # Tablas derivadas del análisis
 │   ├── imagenes/                 # Fotos de portada por especie
 │   └── ...                       # subidas/ y legacy/
 │

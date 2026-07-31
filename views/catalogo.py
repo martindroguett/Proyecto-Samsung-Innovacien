@@ -8,7 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from core import datos
-from core.theme import ESPECIE_COLOR, tag_enfermedad, tag_impacto
+from core.theme import ESPECIE_COLOR, OLIVA_OSCURO, tag_enfermedad, tag_impacto
 
 RAIZ = Path(__file__).resolve().parent.parent
 CSV_RESUMEN = RAIZ / "data" / "procesado" / "resumen_especie.csv"
@@ -49,7 +49,7 @@ def render() -> None:
 
 
 def _ficha(f: pd.Series, resumen: pd.DataFrame, fotos: pd.DataFrame) -> None:
-    color = ESPECIE_COLOR.get(f["nombre_comun"], "#4A7C59")
+    color = ESPECIE_COLOR.get(f["nombre_comun"], OLIVA_OSCURO)
 
     with st.container(border=True):
         col_img, col_txt = st.columns([1, 2], gap="large")

@@ -6,13 +6,15 @@ import streamlit as st
 
 from core import autoridades, datos, modelo, ubicacion
 from core.comunas import obtener_comunas, obtener_coordenadas
-from core.theme import pendiente, tag_impacto
+from core.theme import tag_impacto, vacio
 
 
 def render() -> None:
-    st.subheader("Alertar animal, insecto o planta")
+    st.subheader("Alertar especie invasora")
     st.write("Sube o toma una foto. La identificamos y, si es una especie invasora, "
              "preparamos el aviso para la autoridad correspondiente.")
+    st.caption("El modelo reconoce jabali, liebre europea y rata gris. "
+               "Cualquier otra especie quedara sin identificar.")
 
     col_foto, col_resultado = st.columns([1, 1], gap="large")
 
@@ -60,8 +62,9 @@ def _seccion_resultado() -> None:
 
     pred = st.session_state.get("alerta_prediccion")
     if pred is None:
-        pendiente("aqui aparece la especie detectada, su impacto ambiental y el "
-                  "formulario de aviso. Sube una foto y presiona «Identificar especie».")
+        vacio("Sube una foto y presiona «Identificar especie».<br>"
+              "Aqui apareceran la especie detectada, su impacto ambiental "
+              "y el formulario de aviso.")
         return
 
     if pred.simulado:

@@ -35,6 +35,7 @@ DIR_IMAGENES = DIR_DATOS / "imagenes"
 CSV_ESPECIES = DIR_DATOS / "especies.csv"
 CSV_AVISTAMIENTOS = DIR_DATOS / "avistamientos.csv"
 CSV_REPORTES = DIR_DATOS / "reportes.csv"
+CSV_ZONAS = DIR_DATOS / "zonas_urbanas.csv"
 
 # Si es False, nunca se consulta Wikipedia: solo se muestran fotos propias de
 # data/imagenes/<especie>/ o la del catalogo (GBIF).
@@ -138,6 +139,35 @@ def guardar_reporte(reporte: dict) -> None:
         pass
 
 
+@st.cache_data(show_spinner=False)
+def cargar_zonas_urbanas() -> pd.DataFrame:
+    """Las 30 zonas urbanas del proyecto: centro, radio y region."""
+    if not CSV_ZONAS.exists():
+        return pd.DataFrame(columns=["zona", "region", "lat", "lon", "radio_km"])
+    return pd.read_csv(CSV_ZONAS)
+
+
+def clasificar_entorno(lat: float, lon: float) -> tuple[str, str]:
+    """Devuelve (entorno, zona_urbana) para una coordenada.
+
+    Usa la misma definicion que core.ingesta.asignar_zona_urbana: cada zona
+    urbana es un centro con un radio en km, no un poligono administrativo, y
+    lo que cae fuera de todos los radios es rural. Si un punto queda dentro de
+    mas de una zona, gana la mas cercana.
+    """
+    zonas = cargar_zonas_urbanas()
+    if zonas.empty:
+        return "Rural", ""
+
+    d = distancias_km(lat, lon, zonas["lat"].to_numpy(), zonas["lon"].to_numpy())
+    dentro = d <= zonas["radio_km"].to_numpy()
+    if not dentro.any():
+        return "Rural", ""
+
+    i = int(np.argmin(np.where(dentro, d, np.inf)))
+    return "Urbano", str(zonas["zona"].iloc[i])
+
+
 def guardar_avistamiento(especie_nombre_o_id: str | int, region: str, comuna: str,
                          lat: float, lon: float, fecha: str = "",
                          estado: str = "En revision") -> dict:
@@ -163,6 +193,12 @@ def guardar_avistamiento(especie_nombre_o_id: str | int, region: str, comuna: st
     else:
         nuevo_id = 1
 
+    # El entorno se calcula, no se asume. Dejarlo fijo en "Rural" marcaba como
+    # rural un avistamiento en pleno centro de Santiago, y ademas contradecia el
+    # punto del proyecto: los reportes ciudadanos existen justamente para cubrir
+    # el vacio urbano que las camaras trampa no alcanzan.
+    entorno, zona = clasificar_entorno(lat, lon)
+
     # Las columnas deben calzar con las que escribe core.ingesta.publicar_para_app,
     # o el CSV queda desalineado al concatenar en modo 'append'.
     nuevo_avistamiento = {
@@ -174,8 +210,8 @@ def guardar_avistamiento(especie_nombre_o_id: str | int, region: str, comuna: st
         "lon": round(lon, 5),
         "fecha": fecha,
         "estado": estado,
-        "entorno": "Rural",
-        "zona_urbana": "",
+        "entorno": entorno,
+        "zona_urbana": zona,
         "fuente": "Reporte ciudadano (app)",
         "gbif_id": "",
         "origen": "App",

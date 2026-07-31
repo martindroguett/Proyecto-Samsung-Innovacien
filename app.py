@@ -18,7 +18,7 @@ from core.theme import aplicar_tema, encabezado
 from views import acerca, alertar, catalogo, cerca, reportes
 
 st.set_page_config(
-    page_title="Proyecto Innovacien",
+    page_title="Flora&Fauna Alerta",
     page_icon="🌿",
     layout="wide",
 )
@@ -43,5 +43,5 @@ for pestana, (_, vista) in zip(st.tabs([t for t, _ in PESTANAS]), PESTANAS):
         vista.render()
 
 st.divider()
-st.caption("Proyecto Innovacien · modelo YOLO11 entrenado · "
+st.caption("Flora&Fauna Alerta · Proyecto Innovacien · modelo YOLO11 entrenado · "
            "avistamientos reales de GBIF (jabali, liebre europea y rata gris)")
