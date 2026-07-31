@@ -1,9 +1,9 @@
-<a href=wikipedia.org><img src=https://raw.githubusercontent.com/martindroguett/Taller01-ProgCient/main/imgs/Wikipedia_Banner.svg.png align="center" alt="Wikipedia" ></a>
+<a><img src="https://github.com/martindroguett/Proyecto-Samsung-Innovacien/blob/main/imagesREADME/banner.png?raw=true" align="center" alt="Flora&Fauna" ></a>
 
 <h1 align="center"> Proyecto Innovacien - Flora&Fauna Alerta </h1>
 
 <p align = center>
-<a><img alt="Static Badge" src="https://img.shields.io/badge/Python-3.8%2B-blue?logo=python"></a>
+<a><img alt="Static Badge" src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python"></a>
 <a href = "https://innovacien.com"> <img alt="Static Badge" src="https://img.shields.io/badge/Samsung-%231428A0.svg?style=for-the-badge&logo=samsung&logoColor=white"></a>
 <a> <img alt="Static Badge" src="https://img.shields.io/badge/UI-Streamlit-red?logo=streamlit"></a>
 
@@ -116,22 +116,22 @@ Proyecto-Samsung-Innovacien
 ├── .streamlit/
 │   └── config.toml               # Tema visual y limite de subida
 │
-├── core/                         # Logica del proyecto
+├── core/                         # Lgica del proyecto
 │   ├── modelo.py                 # Clasificador YOLO11 y umbrales por especie
 │   ├── best.pt                   # Modelo entrenado (YOLO11s, 19 MB)
 │   ├── ingesta.py                # Descarga y limpieza de datos desde GBIF
 │   ├── datos.py                  # Carga de especies, avistamientos y reportes
 │   ├── comunas.py                # Comunas de Chile con sus coordenadas
-│   ├── ubicacion.py              # Region del usuario, compartida por las pestanas
-│   ├── autoridades.py            # Envio del reporte a la autoridad (simulado)
+│   ├── ubicacion.py              # Región del usuario, compartida por las pestañas
+│   ├── autoridades.py            # Envío del reporte a la autoridad (simulado)
 │   └── theme.py                  # Estilos y componentes visuales
 │
-├── views/                        # Una pestana por archivo
+├── views/                        # Una pestaña por archivo
 │   ├── alertar.py                # Subir foto, identificar especie y alertar
-│   ├── cerca.py                  # Mapa de registros por region y comuna
+│   ├── cerca.py                  # Mapa de registros por región y comuna
 │   ├── catalogo.py               # Fichas de las tres especies
 │   ├── reportes.py               # Historial de alertas enviadas
-│   └── acerca.py                 # Metodologia y estado del proyecto
+│   └── acerca.py                 # Metodología y estado del proyecto
 │
 ├── data/
 │   ├── avistamientos.csv         # Dataset principal: 49.133 registros de GBIF
@@ -146,4 +146,24 @@ Proyecto-Samsung-Innovacien
     ├── 01_obtencion_y_limpieza.ipynb
     ├── 02_analisis_territorial.ipynb
     └── html/                     # Los notebooks exportados
+```
+
+## Instalación y ejecución Local
+
+1. Clonar el repositorio:
+```bash
+git clone https://github.com/martindroguett/Proyecto-Samsung-Innovacien
+```
+2. Instalar las dependencias (requiere Python 3.10 o superior):
+```bash
+pip install -r requirements.txt
+```
+3. Levantar la aplicación:
+```bash
+streamlit run app.py
+```
+
+Para regenerar los datos desde GBIF:
+```bash
+python -m core.ingesta
 ```

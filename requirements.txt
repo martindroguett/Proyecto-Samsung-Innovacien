@@ -24,9 +24,17 @@ torchvision==0.28.0 ; sys_platform != "linux"
 ultralytics>=8.3.0,<9
 
 # Nota: ultralytics depende de opencv-python (no de la variante headless), y esa
-# libreria necesita libGL.so.1, que NO viene en el contenedor de Streamlit Cloud.
-# Sin eso la app arranca y muere con ImportError al importar cv2. No se arregla
-# desde aqui: se resuelve con el archivo packages.txt de la raiz.
+# libreria necesita libGL.so.1 y libglib, que NO vienen en el contenedor de
+# Streamlit Cloud. Sin eso la app arranca y muere con ImportError al importar cv2.
+# No se arregla desde aqui: se resuelve con el archivo packages.txt de la raiz.
+#
+# En packages.txt el nombre correcto es 'libglib2.0-0t64', NO 'libglib2.0-0'.
+# El contenedor corre Debian trixie, donde ese paquete se renombro por la
+# transicion a time_t de 64 bits. Pidiendo el nombre viejo, apt lo encuentra solo
+# en el repo bullseye que la imagen todavia arrastra, y esa version depende de
+# libffi7 y libpcre3, que en trixie no existen: el build muere con "held broken
+# packages" ANTES de llegar a pip. Y ojo: packages.txt no admite comentarios,
+# apt-get toma cada linea como nombre de paquete.
 
 # --- Aplicacion -------------------------------------------------------------
 # Los topes de version mayor NO son decorativos: sin ellos el despliegue instala
